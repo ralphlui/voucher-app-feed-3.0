@@ -41,6 +41,8 @@ public class FeedController {
 	
 	@Value("${audit.activity.type.prefix}")
 	String activityTypePrefix;
+	
+	private String apiEndpoint;
 
 	
 	@GetMapping(value = "/users/{userId}", produces = "application/json")

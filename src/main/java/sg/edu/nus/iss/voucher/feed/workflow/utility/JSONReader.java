@@ -136,4 +136,26 @@ public class JSONReader {
 		return userName;
 	}
 
+	public String getMessageFromResponse(JSONObject jsonResponse) {
+		return (String) jsonResponse.get("message");
+	}
+
+	public Boolean getSuccessFromResponse(JSONObject jsonResponse) {
+		return (Boolean) jsonResponse.get("success");
+	}
+
+	public int getStatusFromResponse(JSONObject jsonResponse) {
+		Long status = (Long) jsonResponse.get("status");
+		return status.intValue();
+	}
+
+	public JSONObject parseJsonResponse(String responseStr) throws ParseException {
+		if (responseStr == null || responseStr.isEmpty()) {
+			return null;
+		}
+
+		JSONParser parser = new JSONParser();
+		return (JSONObject) parser.parse(responseStr);
+	}
+
 }
