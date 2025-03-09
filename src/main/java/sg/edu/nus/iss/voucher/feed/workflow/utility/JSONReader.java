@@ -116,7 +116,7 @@ public class JSONReader {
 
 		String userName = "";
 		
-			String responseStr = apiCall.getActiveUser(userId);
+			String responseStr = apiCall.getActiveUser1(userId);
 
 			try {
 

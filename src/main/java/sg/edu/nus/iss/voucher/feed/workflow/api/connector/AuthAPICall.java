@@ -66,7 +66,7 @@ public class AuthAPICall {
 	    return responseStr;
 	}
 	
-	public String getActiveUser(String userId) {
+	public String getActiveUser1(String userId) {
 	    String responseStr = "";
 	    
 	    CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -106,7 +106,7 @@ public class AuthAPICall {
 	}
 	
 	
-	public String validateToken(String token, String userId) {
+	public String validateToken(String token) {
 		String responseStr = "";
 
 		CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -117,7 +117,6 @@ public class AuthAPICall {
 					.setSocketTimeout(30000).build();
 			httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 			HttpGet request = new HttpGet(url);
-			request.setHeader("X-User-Id", userId);
 			request.setHeader("Authorization", "Bearer " + token);
 			CloseableHttpResponse httpResponse = httpClient.execute(request);
 			try {

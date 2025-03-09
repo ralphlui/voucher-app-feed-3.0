@@ -1,7 +1,6 @@
 package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,6 +18,7 @@ import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
 
 import java.io.IOException;
 import java.util.Optional;
+import io.jsonwebtoken.*;
 
 @Component
 public class JwtValidationFilter extends OncePerRequestFilter {
@@ -49,7 +49,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 			String token = authorizationHeader.substring(7);
-			String responseStr = authApiCall.validateToken(token, userID);
+			String responseStr = authApiCall.validateToken(token);
 
 			try {
 				JSONObject jsonResponse = jsonReader.parseJsonResponse(responseStr);
@@ -62,9 +62,18 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 					return;
 				}
 
-			} catch (ParseException e) {
-				handleException(response, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				e.printStackTrace();
+			} catch (ExpiredJwtException e) {
+				handleException(response, "JWT token is expired", HttpServletResponse.SC_UNAUTHORIZED);
+				return;
+			} catch (MalformedJwtException e) {
+				handleException(response, "Invalid JWT token", HttpServletResponse.SC_UNAUTHORIZED);
+				return;
+			} catch (SecurityException e) {
+				handleException(response, "JWT signature is invalid", HttpServletResponse.SC_UNAUTHORIZED);
+				return;
+			} catch (Exception e) {
+				handleException(response, e.getMessage(), HttpServletResponse.SC_UNAUTHORIZED);
+				return;
 			}
 		}
 		filterChain.doFilter(request, response);
