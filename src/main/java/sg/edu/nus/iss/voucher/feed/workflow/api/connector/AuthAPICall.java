@@ -66,7 +66,7 @@ public class AuthAPICall {
 	    return responseStr;
 	}
 	
-	public String getActiveUser1(String userId) {
+	public String getActiveUser(String userId) {
 	    String responseStr = "";
 	    
 	    CloseableHttpClient httpClient = HttpClients.createDefault();
