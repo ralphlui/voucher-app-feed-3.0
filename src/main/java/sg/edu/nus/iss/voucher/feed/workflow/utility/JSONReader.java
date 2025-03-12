@@ -17,6 +17,7 @@ import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.Feed;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
+import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 @Component
 public class JSONReader {
@@ -35,7 +36,7 @@ public class JSONReader {
 			// Parse the SNS notification payload
 			JSONObject messageObject = (JSONObject) new JSONParser().parse(message);
 			if (messageObject != null) {
-				
+
 				String category = (String) messageObject.get("category");
 
 				JSONObject campaign = (JSONObject) messageObject.get("campaign");
@@ -52,7 +53,7 @@ public class JSONReader {
 				logger.info("Campaign Description: " + campaignDescription);
 				logger.info("Store ID: " + storeId);
 				logger.info("Store Name: " + storeName);
-				
+
 				feedMsg.setCategory(category);
 				feedMsg.setCampaignId(campaignId);
 				feedMsg.setCampaignDescription(campaignDescription);
@@ -87,12 +88,12 @@ public class JSONReader {
 				for (Object obj : data) {
 					JSONObject user = (JSONObject) obj;
 					logger.info("User: " + user.toJSONString());
-					
+
 					String userId = GeneralUtility.makeNotNull(user.get("userID").toString());
 					String email = GeneralUtility.makeNotNull(user.get("email").toString());
 					String username = GeneralUtility.makeNotNull(user.get("username").toString());
 
-					if (!email.isEmpty() ) {
+					if (!email.isEmpty()) {
 						TargetUser targetUser = new TargetUser();
 						targetUser.setUserId(userId);
 						targetUser.setEmail(email);
@@ -111,28 +112,27 @@ public class JSONReader {
 		return targetUsers;
 	}
 
-	
-	public  String getActiveUser(String userId) {		 
+	public String getActiveUser(String userId) {
 
 		String userName = "";
-		
-			String responseStr = apiCall.getActiveUser(userId);
 
-			try {
+		String responseStr = apiCall.getActiveUser(userId);
 
-				JSONParser parser = new JSONParser();
-				JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);	
-				JSONObject data = (JSONObject) jsonResponse.get("data");
-			 	logger.info("User: " + data.toJSONString());
-					
-			    userName = GeneralUtility.makeNotNull(data.get("username").toString());
+		try {
 
-			} catch (ParseException e) {
-				e.printStackTrace();
-				logger.error("Error parsing JSON response for getActiveUser... {}", e.toString());
-				 
-			}
-		
+			JSONParser parser = new JSONParser();
+			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
+			JSONObject data = (JSONObject) jsonResponse.get("data");
+			logger.info("User: " + data.toJSONString());
+
+			userName = GeneralUtility.makeNotNull(data.get("username").toString());
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			logger.error("Error parsing JSON response for getActiveUser... {}", e.toString());
+
+		}
+
 		return userName;
 	}
 
@@ -156,6 +156,37 @@ public class JSONReader {
 
 		JSONParser parser = new JSONParser();
 		return (JSONObject) parser.parse(responseStr);
+	}
+
+	public User getActiveUserDetails(String userId) {
+
+		User var = new User();
+
+		String responseStr = apiCall.getActiveUser(userId);
+
+		try {
+
+			JSONParser parser = new JSONParser();
+			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
+			JSONObject data = (JSONObject) jsonResponse.get("data");
+			logger.info("User: " + data.toJSONString());
+			if (data != null) {
+				String userName = GeneralUtility.makeNotNull(data.get("username").toString());
+				String email = GeneralUtility.makeNotNull(data.get("email").toString());
+				String role = GeneralUtility.makeNotNull(data.get("role").toString());
+				var.setUserId(userId);
+				var.setEmail(email);
+				var.setRole(role);
+				var.setUsername(userName);
+			}
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			logger.error("Error parsing JSON response for getActiveUserDetails... {}", e.toString());
+
+		}
+
+		return var;
 	}
 
 }
