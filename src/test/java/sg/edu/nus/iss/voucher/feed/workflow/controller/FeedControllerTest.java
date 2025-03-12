@@ -53,6 +53,8 @@ public class FeedControllerTest {
     private static AuditDTO auditDTO ;
     
     static String userId ="user123";
+    static String token = "eyJhbGciOiJSUzI1NiJ9.eyJ1c2VyRW1haWwiOiJ0aGV0bmFuZGFyYXVuZy51Y3NtQGdtYWlsLmNvbSI";
+    
     
     @BeforeAll
     static void setUp() {
@@ -102,14 +104,15 @@ public class FeedControllerTest {
     @Test
     public void testGetFeedById() throws Exception {
         String feedId = "123";
-
+        
+       
         when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix,"/api/feeds/"+feedId, HTTPVerb.GET))
         .thenReturn(auditDTO);
         
         when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/feeds/{id}", feedId)
-        		.header("X-User-Id", userId)
+        		.header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
                 /*.andExpect(status().isOk())
@@ -130,7 +133,7 @@ public class FeedControllerTest {
         when(feedService.updateReadStatusById(feedId)).thenReturn(feedDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/feeds/{id}/readStatus", feedId)
-        		.header("X-User-Id", userId)
+        		.header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON))
         		.andExpect(status().is4xxClientError());
                 /*.andExpect(status().isOk())

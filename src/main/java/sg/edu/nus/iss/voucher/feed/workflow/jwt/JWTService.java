@@ -87,5 +87,21 @@ public class JWTService {
             throw new RuntimeException("Error hashing refresh token", e);
         }
     }
+    
+    public String getUserIdByAuthHeader(String authHeader) throws JwtException, IllegalArgumentException, Exception {
+    	String userID ="";
+    	String jwtToken = authHeader.substring(7); // Remove "Bearer " prefix
+    	if(jwtToken != null) {
+    		 userID = extractUserID(jwtToken);
+    		/*UserDetails userDetails  = getUserDetail(jwtToken);
+    		if(userDetails != null) {
+    		boolean validToken = validateToken(jwtToken, userDetails);
+    		if(validToken) {
+    			 userID = extractUserID(jwtToken);
+    		}
+    		}*/
+    	}
+		return userID;
+    }
 
 }
