@@ -130,7 +130,7 @@ public class FeedControllerTest {
         mockUser.setEmail("eleven.11@gmail.com");
         mockUser.setPassword("111111");
         mockUser.setUserId("12345");
-        when(jsonReader.getActiveUserDetails("12345")).thenReturn(mockUser);
+        when(jsonReader.getActiveUserDetails("12345","mock.jwt.token")).thenReturn(mockUser);
         
 
         when(jwtService.extractUserID("mock.jwt.token")).thenReturn(userId);
@@ -166,7 +166,7 @@ public class FeedControllerTest {
         mockUser.setEmail("eleven.11@gmail.com");
         mockUser.setPassword("111111");
         mockUser.setUserId("12345");
-        when(jsonReader.getActiveUserDetails("12345")).thenReturn(mockUser);
+        when(jsonReader.getActiveUserDetails("12345","mock.jwt.token")).thenReturn(mockUser);
         
 
         when(jwtService.extractUserID("mock.jwt.token")).thenReturn(userId);
@@ -205,7 +205,7 @@ public class FeedControllerTest {
         mockUser.setEmail("eleven.11@gmail.com");
         mockUser.setPassword("111111");
         mockUser.setUserId("12345");
-        when(jsonReader.getActiveUserDetails("12345")).thenReturn(mockUser);
+        when(jsonReader.getActiveUserDetails("12345","mock.jwt.token")).thenReturn(mockUser);
         
 
         when(jwtService.extractUserID("mock.jwt.token")).thenReturn(userId);

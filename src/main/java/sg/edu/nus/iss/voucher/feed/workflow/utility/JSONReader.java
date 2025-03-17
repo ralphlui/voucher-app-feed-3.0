@@ -158,11 +158,11 @@ public class JSONReader {
 		return (JSONObject) parser.parse(responseStr);
 	}
 
-	public User getActiveUserDetails(String userId) {
+	public User getActiveUserDetails(String userId,String token) {
 
 		User var = new User();
 
-		String responseStr = apiCall.getActiveUser(userId);
+		String responseStr = apiCall.validateActiveUser(userId,token);
 
 		try {
 
