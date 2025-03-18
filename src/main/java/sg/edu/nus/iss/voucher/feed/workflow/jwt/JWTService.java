@@ -90,18 +90,24 @@ public class JWTService {
     
     public String getUserIdByAuthHeader(String authHeader) throws JwtException, IllegalArgumentException, Exception {
     	String userID ="";
-    	String jwtToken = authHeader.substring(7); // Remove "Bearer " prefix
+    	String jwtToken = authHeader.substring(7);
     	if(jwtToken != null) {
     		 userID = extractUserID(jwtToken);
-    		/*UserDetails userDetails  = getUserDetail(jwtToken);
-    		if(userDetails != null) {
-    		boolean validToken = validateToken(jwtToken, userDetails);
-    		if(validToken) {
-    			 userID = extractUserID(jwtToken);
-    		}
-    		}*/
+    		
     	}
 		return userID;
     }
+    
+    public String retrieveUserName(String token) throws JwtException, IllegalArgumentException, Exception {
+		try {
+			Claims claims = extractAllClaims(token);
+			String userName = claims.get("userName", String.class);
+			return userName;
+		} catch (ExpiredJwtException e) {
+			return e.getClaims().get("userName", String.class);
+		} catch (Exception e) {
+			return "Invalid Username";
+		}
+	}
 
 }

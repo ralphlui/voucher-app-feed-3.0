@@ -11,7 +11,6 @@ import sg.edu.nus.iss.voucher.feed.workflow.entity.Feed;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
 import sg.edu.nus.iss.voucher.feed.workflow.strategy.impl.EmailStrategy;
-import sg.edu.nus.iss.voucher.feed.workflow.strategy.impl.NotificationStrategy;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -36,9 +35,7 @@ public class SNSSubscriptionServiceTest {
     @Mock
     private EmailStrategy emailStrategy;
 
-    @Mock
-    private NotificationStrategy notificationStrategy;
-
+    
     @InjectMocks
     private SNSSubscriptionService snsSubscriptionService;
 
@@ -54,7 +51,7 @@ public class SNSSubscriptionServiceTest {
         		+ "    \"Type\": \"Notification\",\n"
         		+ "    \"MessageId\": \"example-message-id\",\n"
         		+ "    \"TopicArn\": \"arn:aws:sns:region:account-id:topic-name\",\n"
-        		+ "    \"Message\": \"{\\\"category\\\": \\\"Food\\\", \\\"campaign\\\": {\\\"campaignId\\\": \\\"123\\\", \\\"description\\\": \\\"Happy Hour\\\"}, \\\"store\\\": {\\\"storeId\\\": \\\"456\\\", \\\"name\\\": \\\"MUJI\\\"}}\",\n"
+        		+ "    \"Message\": \"{ \\\"campaign\\\": {\\\"campaignId\\\": \\\"123\\\", \\\"description\\\": \\\"Happy Hour\\\"}, \\\"store\\\": {\\\"storeId\\\": \\\"456\\\", \\\"name\\\": \\\"MUJI\\\"}}\",\n"
         		+ "    \"Timestamp\": \"2024-09-08T12:34:56.789Z\",\n"
         		+ "    \"SignatureVersion\": \"1\",\n"
         		+ "    \"Signature\": \"example-signature\",\n"
@@ -82,7 +79,6 @@ public class SNSSubscriptionServiceTest {
 		users.add(user);
         
         Feed feed = new Feed();
-		feed.setCategory(feedMsg.getCategory());
 		feed.setUserId(user.getUserId());
 		feed.setUserName(user.getUsername());
 		feed.setEmail(user.getEmail());
@@ -94,10 +90,8 @@ public class SNSSubscriptionServiceTest {
       
 
         when(jsonReader.readFeedMessage(anyString())).thenReturn(feedMsg);
-        when(jsonReader.getUsersByPreferences(anyString())).thenReturn(users);
         when(feedDAO.checkFeedExistsByUserAndCampaign(anyString(), anyString())).thenReturn(true);
         when(feedDAO.saveFeed(any(Feed.class))).thenReturn(feed); 
-        when(notificationStrategy.sendNotification(any(FeedDTO.class))).thenReturn(true);
         when(emailStrategy.sendNotification(any(FeedDTO.class))).thenReturn(true);
 
      

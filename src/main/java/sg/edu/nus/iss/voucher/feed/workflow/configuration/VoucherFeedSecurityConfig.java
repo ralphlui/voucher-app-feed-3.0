@@ -3,6 +3,7 @@ package sg.edu.nus.iss.voucher.feed.workflow.configuration;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +24,16 @@ import sg.edu.nus.iss.voucher.feed.workflow.jwt.JwtFilter;
 @EnableWebSecurity
 public class VoucherFeedSecurityConfig {
 
-    private static final String[] SECURED_URLS = { "/api/feeds/**", "/ws/liveFeeds/**" };
+    private static final String[] SECURED_URLS = { "/api/feeds/**"};
+    
+    @Value("${frontend.url}")
+	private String frontEndUrl;
+
+	@Bean
+	public String getFrontEndUrl() {
+		return frontEndUrl;
+	}
+
     
     @Autowired 
     JwtFilter jwtFilter;
@@ -33,7 +43,7 @@ public class VoucherFeedSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOrigins(List.of("https://localhost.com"));
+            config.setAllowedOrigins(List.of(frontEndUrl.trim()));
             config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
             config.applyPermitDefaultValues();

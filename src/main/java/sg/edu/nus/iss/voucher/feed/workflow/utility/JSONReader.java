@@ -68,14 +68,14 @@ public class JSONReader {
 		return feedMsg;
 	}
 
-	public ArrayList<TargetUser> getUsersByPreferences(String preferences) {
+	public ArrayList<User> getAllActiveUsers(String token) {
 		int page = 0;
 		int size = Integer.parseInt(pageMaxSize);
 		int totalRecord;
 
-		ArrayList<TargetUser> targetUsers = new ArrayList<TargetUser>();
+		ArrayList<User> users = new ArrayList<User>();
 		do {
-			String responseStr = apiCall.getUsersByPreferences(preferences, page, size);
+			String responseStr = apiCall.getAllActiveUsers(token, page, size);
 
 			try {
 
@@ -94,11 +94,11 @@ public class JSONReader {
 					String username = GeneralUtility.makeNotNull(user.get("username").toString());
 
 					if (!email.isEmpty()) {
-						TargetUser targetUser = new TargetUser();
-						targetUser.setUserId(userId);
-						targetUser.setEmail(email);
-						targetUser.setUsername(username);
-						targetUsers.add(targetUser);
+						User var = new User();
+						var.setUserId(userId);
+						var.setEmail(email);
+						var.setUsername(username);
+						users.add(var);
 					}
 				}
 
@@ -109,14 +109,14 @@ public class JSONReader {
 				break;
 			}
 		} while (totalRecord > page * size);
-		return targetUsers;
+		return users;
 	}
 
-	public String getActiveUser(String userId) {
+	public String getActiveUser(String userId,String token) {
 
 		String userName = "";
 
-		String responseStr = apiCall.getActiveUser(userId);
+		String responseStr = apiCall.getActiveUser(userId,token);
 
 		try {
 

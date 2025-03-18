@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import sg.edu.nus.iss.voucher.feed.workflow.dao.FeedDAO;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.*;
+import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 import sg.edu.nus.iss.voucher.feed.workflow.strategy.impl.EmailStrategy;
-import sg.edu.nus.iss.voucher.feed.workflow.strategy.impl.NotificationStrategy;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.*;
 
 @Service
@@ -29,8 +29,6 @@ public class SNSSubscriptionService {
 	@Autowired
 	private EmailStrategy emailStrategy;
 
-	@Autowired
-	private NotificationStrategy notificationStrategy;
 
 	private static final Logger logger = LoggerFactory.getLogger(SNSSubscriptionService.class);
 
@@ -53,26 +51,18 @@ public class SNSSubscriptionService {
 				return retMsg = "Bad Request:Failed to parse the feed message. The message payload is null or invalid.";
 			}
 
-			String category = GeneralUtility.makeNotNull(feedMsg.getCategory());
-			if (category.isEmpty()) {
-				logger.info("Category is empty.");
-				return retMsg = "Bad Request:Category is empty.";
-			}
+			retMsg += "Processed user:" ;
+			/*ArrayList<User> users = getAllActiveUsers(token);
+			
 
-			ArrayList<TargetUser> targetUsers = getTargetUsers(category);
-			if (targetUsers.isEmpty()) {
-				logger.warn("No users found for the category: {}", category);
-				return retMsg = "Bad Request:No users found for the category: " + category;
-			}
-
-			logger.info("Processing target users: {}", targetUsers);
+			logger.info("Processing target users: {}", users);
 			retMsg = "Processed user:";
-			for (TargetUser targetUser : targetUsers) {
-				boolean processed = processTargetUser(targetUser, feedMsg);
-				logger.info("Processed user: {} with result: {}", targetUser.getUserId(), processed);
-				retMsg += targetUser.getUserId() + ":" + processed ;
+			for (User user : users) {
+				boolean processed = generatFeed(user, feedMsg);
+				logger.info("Processed user: {} with result: {}", user.getUserId(), processed);
+				retMsg += user.getUserId() + ":" + processed ;
 
-			}
+			}*/
 
 		} catch (Exception ex) {
 			logger.error("Bad Request:Process Message Exception: {}", ex.toString(), ex);
@@ -80,16 +70,16 @@ public class SNSSubscriptionService {
 		return retMsg;
 	}
 
-	ArrayList<TargetUser> getTargetUsers(String category) {
+	ArrayList<User> getAllActiveUsers(String token) {
 
-		ArrayList<TargetUser> targetUsers = jsonReader.getUsersByPreferences(category);
-		return targetUsers;
+		ArrayList<User> users = jsonReader.getAllActiveUsers(token);
+		return users;
 	}
 
-	public boolean processTargetUser(TargetUser targetUser, MessagePayload feedMsg) {
+	public boolean generatFeed(User user, MessagePayload feedMsg) {
 
 		try {
-			String userId = GeneralUtility.makeNotNull(targetUser.getUserId()).trim();
+			String userId = GeneralUtility.makeNotNull(user.getUserId()).trim();
 			logger.info("userId: {}", userId);
 
 			if (userId.isEmpty()) {
@@ -97,12 +87,12 @@ public class SNSSubscriptionService {
 			}
 
 			// Check checkFeedExistsByUserAndCampaign
-			boolean isExists = feedDAO.checkFeedExistsByUserAndCampaign(targetUser.getUserId(),
+			boolean isExists = feedDAO.checkFeedExistsByUserAndCampaign(user.getUserId(),
 					feedMsg.getCampaignId());
 			logger.info("checkFeedExistsByUserAndCampaign: {}", isExists);
 			//
 			if (!isExists) {
-				Feed feed = createFeed(feedMsg, targetUser);
+				Feed feed = createFeed(feedMsg, user);
 
 				Feed savedFeed = feedDAO.saveFeed(feed);
 				if (savedFeed.getFeedId().isEmpty()) {
@@ -124,13 +114,12 @@ public class SNSSubscriptionService {
 		return false;
 	}
 
-	private Feed createFeed(MessagePayload feedMsg, TargetUser targetUser) throws Exception {
+	private Feed createFeed(MessagePayload feedMsg, User user) throws Exception {
 
 		Feed feed = new Feed();
-		feed.setUserId(targetUser.getUserId());
-		feed.setEmail(targetUser.getEmail());
-		feed.setUserName(targetUser.getUsername());
-		feed.setCategory(GeneralUtility.makeNotNull(feedMsg.getCategory()));
+		feed.setUserId(user.getUserId());
+		feed.setEmail(user.getEmail());
+		feed.setUserName(user.getUsername());
 		feed.setCampaignId(GeneralUtility.makeNotNull(feedMsg.getCampaignId()));
 		feed.setCampaignDescription(GeneralUtility.makeNotNull(feedMsg.getCampaignDescription()));
 		feed.setStoreId(GeneralUtility.makeNotNull(feedMsg.getStoreId()));
@@ -139,12 +128,11 @@ public class SNSSubscriptionService {
 	}
 
 	private boolean sendNotifications(FeedDTO feedDTO) {
-		boolean isSendNotification = notificationStrategy.sendNotification(feedDTO);
-		logger.info("isSendLiveFeed: {}", isSendNotification);
+		
 		boolean isSendEmail = emailStrategy.sendNotification(feedDTO);
 		logger.info("isSendEmail: {}", isSendEmail);
 
-		return isSendEmail || isSendNotification;
+		return isSendEmail;
 	}
 
 }

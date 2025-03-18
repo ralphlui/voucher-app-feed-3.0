@@ -1,5 +1,7 @@
 package sg.edu.nus.iss.voucher.feed.workflow.service.impl;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
 import sg.edu.nus.iss.voucher.feed.workflow.aws.service.SQSPublishingService;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.AuditDTO;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.*;
+import sg.edu.nus.iss.voucher.feed.workflow.jwt.JWTService;
 import sg.edu.nus.iss.voucher.feed.workflow.service.IAuditService;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.GeneralUtility;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
@@ -23,24 +26,23 @@ public class AuditService implements IAuditService {
 	AuthAPICall apiCall;
 	
 	@Autowired
-	private JSONReader jsonReader;
-
+	private JWTService jwtService;
+	
 	@Autowired
 	private SQSPublishingService sqsPublishingService;
 
 	@Override
-	public void sendMessage(AuditDTO autAuditDTO) {
+	public void sendMessage(AuditDTO autAuditDTO,String token) {
 
 		try {
-			String userId = GeneralUtility.makeNotNull(autAuditDTO.getUserId());
+			String jwtToken = token.substring(7);
+			String userName = "Invalid Username";
 
-			if (!userId.equals("")) {
-					
-					String userName=jsonReader.getActiveUser(userId);
-					if(!userName.equals("")){
-					autAuditDTO.setUsername(userName);
-				
-			}
+			if (!jwtToken.isEmpty()) {
+			   userName = Optional.ofNullable(jwtService.retrieveUserName(jwtToken))
+		                   .orElse("Invalid Username");
+			   autAuditDTO.setUsername(userName);
+
 			}
 			
 			if(autAuditDTO.getUsername().equals("")) {
@@ -67,7 +69,7 @@ public class AuditService implements IAuditService {
 		return auditDTO;
 	}
 
-	public void logAudit(AuditDTO auditDTO, int stausCode, String message) {
+	public void logAudit(AuditDTO auditDTO, int stausCode, String message,String token) {
 		logger.error(message);
 		auditDTO.setStatusCode(stausCode);
 		if (stausCode == 200) {
@@ -77,7 +79,7 @@ public class AuditService implements IAuditService {
 			auditDTO.setResponseStatus(AuditResponseStatus.FAILED);
 		}
 		auditDTO.setActivityDescription(message);
-		this.sendMessage(auditDTO);
+		this.sendMessage(auditDTO,token);
 
 	}
 

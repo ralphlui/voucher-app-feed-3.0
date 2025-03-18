@@ -26,47 +26,8 @@ public class AuthAPICall {
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthAPICall.class);
 	
-	public String getUsersByPreferences(String preferences, int page, int size) {
-	    String responseStr = "";
-	    String userId="FeedNotifier";
-	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
-	    	String encodedPreferences = URLEncoder.encode(preferences.trim(), StandardCharsets.UTF_8.toString()).trim();
-	        String url = authURL.trim() + "/preferences/" + encodedPreferences + "?page=" + page + "&size=" + size;
-	        logger.info("getUsersByPreferences url : " + url);
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-	        HttpGet request = new HttpGet(url);
-	        request.setHeader("X-User-Id", userId);
-	        CloseableHttpResponse httpResponse = httpClient.execute(request);
-	        try {
-	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
-	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
-	            logger.info("getUsersByPreferences: " + responseStr);
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            logger.error("getUsersByPreferences exception... {}", e.toString());
-	        } finally {
-	            try {
-	                httpResponse.close();
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	                logger.error("getUsersByPreferences exception... {}", e.toString());
-	            }
-	        }
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	        logger.error("getUsersByPreferences exception... {}", ex.toString());
-	    }
-	    return responseStr;
-	}
 	
-	public String getActiveUser(String userId) {
+	public String getActiveUser(String userId,String authorizationHeader ) {
 	    String responseStr = "";
 	    
 	    CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -81,7 +42,7 @@ public class AuthAPICall {
 	                .build();
 	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	        HttpGet request = new HttpGet(url);
-	        request.setHeader("X-User-Id", userId);
+	        request.setHeader("Authorization", authorizationHeader);
 	        CloseableHttpResponse httpResponse = httpClient.execute(request);
 	        try {
 	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
@@ -144,5 +105,43 @@ public class AuthAPICall {
 	    return responseStr;
 	}
 	
+	public String getAllActiveUsers(String authorizationHeader,int page, int size) {
+	    String responseStr = "";
+	   
+	    
+	    CloseableHttpClient httpClient = HttpClients.createDefault();
+	    try {
+	        String url = authURL.trim()  + "?page=" + page + "&size=" + size;
+	        logger.info("getAllActiveUsers url : " + url);
+	        RequestConfig config = RequestConfig.custom()
+	                .setConnectTimeout(30000)
+	                .setConnectionRequestTimeout(30000)
+	                .setSocketTimeout(30000)
+	                .build();
+	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+	        HttpGet request = new HttpGet(url);
+	        request.setHeader("Authorization", authorizationHeader);
+	        CloseableHttpResponse httpResponse = httpClient.execute(request);
+	        try {
+	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
+	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
+	            logger.info("getAllActiveUsers: " + responseStr);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            logger.error("getAllActiveUsers exception... {}", e.toString());
+	        } finally {
+	            try {
+	                httpResponse.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	                logger.error("getAllActiveUsers exception... {}", e.toString());
+	            }
+	        }
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	        logger.error("getAllActiveUsers exception... {}", ex.toString());
+	    }
+	    return responseStr;
+	}
 	
 }
