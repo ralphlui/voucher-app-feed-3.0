@@ -37,7 +37,7 @@ public class JSONReader {
 			JSONObject messageObject = (JSONObject) new JSONParser().parse(message);
 			if (messageObject != null) {
 
-				String category = (String) messageObject.get("category");
+				String email = (String) messageObject.get("email");
 
 				JSONObject campaign = (JSONObject) messageObject.get("campaign");
 				String campaignId = (String) campaign.get("campaignId");
@@ -48,13 +48,13 @@ public class JSONReader {
 				String storeName = (String) store.get("name");
 
 				// Log or process the data
-				logger.info("Category: " + category);
+				logger.info("email: " + email);
 				logger.info("Campaign ID: " + campaignId);
 				logger.info("Campaign Description: " + campaignDescription);
 				logger.info("Store ID: " + storeId);
 				logger.info("Store Name: " + storeName);
 
-				feedMsg.setCategory(category);
+				feedMsg.setEmail(email);
 				feedMsg.setCampaignId(campaignId);
 				feedMsg.setCampaignDescription(campaignDescription);
 				feedMsg.setStoreId(storeId);
@@ -187,6 +187,29 @@ public class JSONReader {
 		}
 
 		return var;
+	}
+	
+	public String getAccessToken(String email) {
+
+		String token = "";
+
+		String responseStr = apiCall.getAccessToken(email);
+		try {
+
+			JSONParser parser = new JSONParser();
+			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
+			JSONObject data = (JSONObject) jsonResponse.get("data");
+			logger.info("Token: " + data.toJSONString());
+
+			token = GeneralUtility.makeNotNull(data.get("token").toString());
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+			logger.error("Error parsing JSON response for getAccessToken... {}", e.toString());
+
+		}
+
+		return token;
 	}
 
 }

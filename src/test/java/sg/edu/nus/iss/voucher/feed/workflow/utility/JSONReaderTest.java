@@ -64,7 +64,7 @@ public class JSONReaderTest {
         store.put("name", "MUJI");
 
         JSONObject message = new JSONObject();
-        message.put("category", "Food");
+        message.put("email", "tester@gmail.com");
         message.put("campaign", campaign);
         message.put("store", store);
 
@@ -72,7 +72,7 @@ public class JSONReaderTest {
         MessagePayload result = jsonReader.readFeedMessage(messageString);
 
         assertNotNull(result);
-        assertEquals("Food", result.getCategory(), "Category mismatch");
+        assertEquals("tester@gmail.com", result.getEmail(), "Email mismatch");
         assertEquals("123", result.getCampaignId(), "Campaign ID mismatch");
         assertEquals("Happy Hour", result.getCampaignDescription(), "Campaign description mismatch");
         assertEquals("456", result.getStoreId(), "Store ID mismatch");
@@ -82,7 +82,7 @@ public class JSONReaderTest {
     
     
     @Test
-    public void testGetUsersByPreferences() {
+    public void testGetActiveUsers() {
     	
     	 // Prepare mock responses
         JSONObject page1Response = new JSONObject();

@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MessagePayload {
-	private String category;
+	private String email;
 	private String campaignId;
 	private String campaignDescription;
     private String storeId;

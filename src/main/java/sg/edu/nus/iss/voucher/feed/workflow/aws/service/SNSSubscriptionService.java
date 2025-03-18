@@ -51,8 +51,18 @@ public class SNSSubscriptionService {
 				return retMsg = "Bad Request:Failed to parse the feed message. The message payload is null or invalid.";
 			}
 
+			String email = GeneralUtility.makeNotNull(feedMsg.getEmail());
+			if (email.isEmpty()) {
+				logger.info("Promoted User is empty.");
+				return retMsg = "Bad Request:Promoted User is empty.";
+			}
+			
+			//Generate token
+			String token = jsonReader.getAccessToken(email);
+			//
+			
 			retMsg += "Processed user:" ;
-			/*ArrayList<User> users = getAllActiveUsers(token);
+			ArrayList<User> users = getAllActiveUsers(token);
 			
 
 			logger.info("Processing target users: {}", users);
@@ -62,7 +72,7 @@ public class SNSSubscriptionService {
 				logger.info("Processed user: {} with result: {}", user.getUserId(), processed);
 				retMsg += user.getUserId() + ":" + processed ;
 
-			}*/
+			}
 
 		} catch (Exception ex) {
 			logger.error("Bad Request:Process Message Exception: {}", ex.toString(), ex);
