@@ -162,7 +162,7 @@ public class JSONReader {
 
 		User var = new User();
 
-		String responseStr = apiCall.validateActiveUser(userId,token);
+		String responseStr = apiCall.getActiveUser(userId,token);
 
 		try {
 

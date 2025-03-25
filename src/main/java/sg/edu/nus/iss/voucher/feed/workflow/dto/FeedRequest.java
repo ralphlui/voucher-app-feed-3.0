@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class APIRequest {
+public class FeedRequest {
 	private String feedId="";
 	private String campaignId="";
 	private String userId="";

@@ -73,7 +73,7 @@ public class FeedControllerTest {
 	static String userId = "user123";
 	static String authorizationHeader = "Bearer mock.jwt.token";
 	
-	private static APIRequest apiRequest = new APIRequest( "1", "1", userId);
+	private static FeedRequest apiRequest = new FeedRequest( "1", "1", userId);
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -124,7 +124,7 @@ public class FeedControllerTest {
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 		 		.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
-				.andExpect(jsonPath("$.message").value("Successfully get all feeds"))
+				.andExpect(jsonPath("$.message").value("Successfully get all feeds by Users"))
 				.andExpect(jsonPath("$.totalRecord").value(10)).andDo(print());
 
 	}

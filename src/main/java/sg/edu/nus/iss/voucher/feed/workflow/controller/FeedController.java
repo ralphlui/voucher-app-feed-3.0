@@ -46,7 +46,7 @@ public class FeedController {
 	@PostMapping(value = "/users", produces = "application/json")
 	public ResponseEntity<APIResponse<List<FeedDTO>>> getByUserId(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody APIRequest apiRequest, @RequestParam(defaultValue = "0") int page,
+			@RequestBody FeedRequest apiRequest, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "50") int size) {
 
 		logger.info("Call feeds by UserId feed API...");
@@ -84,7 +84,7 @@ public class FeedController {
 					logger.info("FeedDTO List: " + feedDTOList);
 				}
 
-				message = "Successfully get all feeds";
+				message = "Successfully get all feeds by Users";
 				auditService.logAudit(auditDTO, 200, message, authorizationHeader);
 
 				return ResponseEntity.status(HttpStatus.OK)
@@ -109,7 +109,7 @@ public class FeedController {
 	@PostMapping(value = "/Id", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> getFeedById(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody APIRequest apiRequest) {
+			@RequestBody FeedRequest apiRequest) {
 		logger.info("Calling getById Feed API...");
 		String message = "";
 		String activityType = "Find Feed by Id";
@@ -159,7 +159,7 @@ public class FeedController {
 	@PostMapping(value = "/readStatus", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> patchFeedReadStatus(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody APIRequest apiRequest) {
+			@RequestBody FeedRequest apiRequest) {
 
 		logger.info("Calling updateReadStatusById Feed API...");
 		String message = "";
