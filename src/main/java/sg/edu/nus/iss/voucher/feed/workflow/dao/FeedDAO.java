@@ -59,7 +59,7 @@ public class FeedDAO {
 	final String EMAIL = "Email";
 	final String USERNAME = "UserName";
 	final String CREATEDDATE = "CreatedDate";
-	final String CATEGORY ="Category";
+	
 
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"); 
 
@@ -95,7 +95,6 @@ public class FeedDAO {
 				feed.setIsReaded(item.getString(ISREADED));
 				feed.setReadTime(item.getString(READTIME));
 				feed.setCreatedDate(item.getString(CREATEDDATE));
-				feed.setCategory(item.getString(CATEGORY));
 				feedList.add(feed);
 			}
 
@@ -137,7 +136,6 @@ public class FeedDAO {
 		            feed.setUserName(GeneralUtility.makeNotNull(getSafeString(item, USERNAME)));
 		            feed.setEmail(GeneralUtility.makeNotNull(getSafeString(item, EMAIL)));
 		            feed.setUserId(GeneralUtility.makeNotNull(getSafeString(item, USERID)));
-		            feed.setCategory(GeneralUtility.makeNotNull(getSafeString(item, CATEGORY)));
 		            feed.setIsDeleted(GeneralUtility.makeNotNull(getSafeString(item, ISDELETED)));
 		            feed.setIsReaded(GeneralUtility.makeNotNull(getSafeString(item, ISREADED)));
 		            feed.setReadTime(GeneralUtility.makeNotNull(getSafeString(item, READTIME)));
@@ -195,7 +193,6 @@ public class FeedDAO {
 					 .with(CAMPAIGNDESCRIPTION, feed.getCampaignDescription())
 					 .with(STOREID, feed.getStoreId())
 					 .with(STORENAME, feed.getStoreName())
-					 .with(CATEGORY, feed.getCategory())
 					 .with(READTIME, ""));
 			 
 			

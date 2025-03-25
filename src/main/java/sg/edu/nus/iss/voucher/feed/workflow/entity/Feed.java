@@ -20,7 +20,6 @@ public class Feed {
 	private String email="";
 	private String createdDate="";
 	private String updatedDate="";
-	private String category="";
 	
 	
 }

@@ -18,6 +18,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
+import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,8 +43,9 @@ public class JSONReaderTest {
     
     static String userId ="1";
     
-    private static final String PREFERENCES = "Food";
     private static final String PAGE_MAX_SIZE = "10";
+    
+    static String authorizationHeader = "Bearer mock.jwt.token";
 
     @BeforeEach
     public void setUp() {
@@ -62,7 +64,7 @@ public class JSONReaderTest {
         store.put("name", "MUJI");
 
         JSONObject message = new JSONObject();
-        message.put("category", "Food");
+        message.put("email", "tester@gmail.com");
         message.put("campaign", campaign);
         message.put("store", store);
 
@@ -70,7 +72,7 @@ public class JSONReaderTest {
         MessagePayload result = jsonReader.readFeedMessage(messageString);
 
         assertNotNull(result);
-        assertEquals("Food", result.getCategory(), "Category mismatch");
+        assertEquals("tester@gmail.com", result.getEmail(), "Email mismatch");
         assertEquals("123", result.getCampaignId(), "Campaign ID mismatch");
         assertEquals("Happy Hour", result.getCampaignDescription(), "Campaign description mismatch");
         assertEquals("456", result.getStoreId(), "Store ID mismatch");
@@ -80,7 +82,7 @@ public class JSONReaderTest {
     
     
     @Test
-    public void testGetUsersByPreferences() {
+    public void testGetActiveUsers() {
     	
     	 // Prepare mock responses
         JSONObject page1Response = new JSONObject();
@@ -102,10 +104,10 @@ public class JSONReaderTest {
         dataArrayPage1.add(user2);
         page1Response.put("data", dataArrayPage1);
         
-        when(apiCall.getUsersByPreferences(PREFERENCES, 0, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
-        when(apiCall.getUsersByPreferences(PREFERENCES, 1, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
+        when(apiCall.getAllActiveUsers(authorizationHeader, 0, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
+        when(apiCall.getAllActiveUsers(authorizationHeader, 1, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
         
-        ArrayList<TargetUser> users = jsonReader.getUsersByPreferences(PREFERENCES);
+        ArrayList<User> users = jsonReader.getAllActiveUsers(authorizationHeader);
 
         assertEquals(2, users.size());
         assertEquals("user1@example.com", users.get(0).getEmail());

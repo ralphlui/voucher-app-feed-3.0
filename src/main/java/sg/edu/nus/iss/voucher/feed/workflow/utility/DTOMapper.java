@@ -19,7 +19,6 @@ public class DTOMapper {
 		feedDTO.setUserId(GeneralUtility.makeNotNull(feed.getUserId()));
 		feedDTO.setUserName(GeneralUtility.makeNotNull(feed.getUserName()));
 		feedDTO.setEmail(GeneralUtility.makeNotNull(feed.getEmail()));
-        feedDTO.setCategory(GeneralUtility.makeNotNull(feed.getCategory()));
 		return feedDTO;
 	}
 
