@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +24,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+ 
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
-import sg.edu.nus.iss.voucher.feed.workflow.dto.AuditDTO;
-import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
+import sg.edu.nus.iss.voucher.feed.workflow.dto.*; 
 import sg.edu.nus.iss.voucher.feed.workflow.entity.HTTPVerb;
 import sg.edu.nus.iss.voucher.feed.workflow.jwt.JWTService;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
@@ -36,32 +36,8 @@ import sg.edu.nus.iss.voucher.feed.workflow.service.impl.FeedService;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
 
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SecurityException;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -69,7 +45,10 @@ import java.util.HashMap;
 public class FeedControllerTest {
 
 	@Autowired
-	private MockMvc mockMvc;
+	private MockMvc mockMvc;	
+	
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@MockBean
 	private FeedService feedService;
@@ -93,6 +72,8 @@ public class FeedControllerTest {
 	private static AuditDTO auditDTO;
 	static String userId = "user123";
 	static String authorizationHeader = "Bearer mock.jwt.token";
+	
+	private static APIRequest apiRequest = new APIRequest( "1", "1", userId);
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -135,16 +116,17 @@ public class FeedControllerTest {
 		when(feedService.getFeedsByUserWithPagination(userId, page, size)).thenReturn(resultMap);
 
 		when(auditService.createAuditDTO(userId, "Feed List by User", activityTypePrefix, "/api/feeds/users/" + userId,
-				HTTPVerb.GET)).thenReturn(auditDTO);
+				HTTPVerb.POST)).thenReturn(auditDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/feeds/users/{userId}", userId)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users")
 				.header("Authorization", authorizationHeader).param("page", String.valueOf(page))
-				.param("size", String.valueOf(size)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+				.param("size", String.valueOf(size))
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+		 		.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
 				.andExpect(jsonPath("$.message").value("Successfully get all feeds"))
 				.andExpect(jsonPath("$.totalRecord").value(10)).andDo(print());
 
-		//verify(auditService).logAudit(auditDTO, 200, "Successfully get all feeds",authorizationHeader);
 	}
 
 	@Test
