@@ -115,7 +115,7 @@ public class FeedControllerTest {
 
 		when(feedService.getFeedsByUserWithPagination(userId, page, size)).thenReturn(resultMap);
 
-		when(auditService.createAuditDTO(userId, "Feed List by User", activityTypePrefix, "/api/feeds/users/" + userId,
+		when(auditService.createAuditDTO(userId, "Feed List by User", activityTypePrefix, "/api/feeds/users",
 				HTTPVerb.POST)).thenReturn(auditDTO);
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users")
@@ -134,8 +134,8 @@ public class FeedControllerTest {
 		String feedId = "123";
 		apiRequest.setFeedId(feedId);
 
-		when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix, "/api/feeds/" + feedId,
-				HTTPVerb.GET)).thenReturn(auditDTO);
+		when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix, "/api/feeds/Id",
+				HTTPVerb.POST)).thenReturn(auditDTO);
 
 		when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
 
@@ -152,14 +152,16 @@ public class FeedControllerTest {
 	public void testPatchFeedReadStatus() throws Exception {
 		String feedId = "123";
 		feedDTO.setIsReaded("1");
+		apiRequest.setFeedId(feedId);
 
 		when(auditService.createAuditDTO(userId, "Update Feed Status", activityTypePrefix,
-				"/api/feeds/" + feedId + "/readStatus", HTTPVerb.PATCH)).thenReturn(auditDTO);
+				"/api/feeds/readStatus", HTTPVerb.POST)).thenReturn(auditDTO);
 
 		when(feedService.updateReadStatusById(feedId)).thenReturn(feedDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/feeds/{id}/readStatus", feedId)
-				.header("Authorization", authorizationHeader).contentType(MediaType.APPLICATION_JSON))
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/readStatus")
+				.header("Authorization", authorizationHeader)
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
 				.andExpect(jsonPath("$.data.feedId").value(feedId))
 				.andExpect(jsonPath("$.message").value("Read status updated successfully for Id: " + feedId));

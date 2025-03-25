@@ -54,7 +54,7 @@ public class FeedController {
 		String message = "";
 		String activityType = "Feed List by User";
 		String endpoint = "/api/feeds/users/";
-		HTTPVerb httpMethod = HTTPVerb.GET;
+		HTTPVerb httpMethod = HTTPVerb.POST;
 
 		String tokenUserId = "Invalid UserID";
 
@@ -114,7 +114,7 @@ public class FeedController {
 		String message = "";
 		String activityType = "Find Feed by Id";
 		String endpoint = "/api/feeds/";
-		HTTPVerb httpMethod = HTTPVerb.GET;
+		HTTPVerb httpMethod = HTTPVerb.POST;
 
 		String tokenUserId = "Invalid UserID";
 
@@ -123,7 +123,7 @@ public class FeedController {
 
 		try {
 
-			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId().trim());
+			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
 			logger.info("feedId: " + feedId);
 			if (!GeneralUtility.makeNotNull(feedId).equals("")) {
 				FeedDTO feedDTO = feedService.findByFeedId(feedId);
@@ -156,16 +156,16 @@ public class FeedController {
 		}
 	}
 
-	@PatchMapping(value = "/{id}/readStatus", produces = "application/json")
+	@PostMapping(value = "/readStatus", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> patchFeedReadStatus(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@PathVariable("id") String id) {
+			@RequestBody APIRequest apiRequest) {
 
 		logger.info("Calling updateReadStatusById Feed API...");
 		String message = "";
 		String activityType = "Update Feed Status";
-		String endpoint = "/api/feeds/" + id + "/readStatus";
-		HTTPVerb httpMethod = HTTPVerb.PATCH;
+		String endpoint = "/api/feeds/readStatus";
+		HTTPVerb httpMethod = HTTPVerb.POST;
 
 		String tokenUserId = "Invalid UserID";
 
@@ -174,7 +174,7 @@ public class FeedController {
 
 		try {
 
-			String feedId = GeneralUtility.makeNotNull(id);
+			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
 			logger.info("feedId: " + feedId);
 
 			if (!GeneralUtility.makeNotNull(feedId).equals("")) {
