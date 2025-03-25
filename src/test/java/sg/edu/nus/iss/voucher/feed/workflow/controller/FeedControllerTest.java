@@ -132,18 +132,20 @@ public class FeedControllerTest {
 	@Test
 	public void testGetFeedById() throws Exception {
 		String feedId = "123";
+		apiRequest.setFeedId(feedId);
 
 		when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix, "/api/feeds/" + feedId,
 				HTTPVerb.GET)).thenReturn(auditDTO);
 
 		when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/feeds/{id}", feedId)
-				.header("Authorization", authorizationHeader).accept(MediaType.APPLICATION_JSON))
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id")
+				.header("Authorization", authorizationHeader)
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
 				.andExpect(jsonPath("$.data.feedId").value(feedId))
 				.andExpect(jsonPath("$.message").value("Feed get successfully.")).andDo(print());
-		//verify(auditService).logAudit(auditDTO, 200, "Feed get successfully.",authorizationHeader);
+		
 	}
 
 	@Test

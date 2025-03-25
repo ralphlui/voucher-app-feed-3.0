@@ -106,10 +106,10 @@ public class FeedController {
 		}
 	}
 
-	@GetMapping(value = "/{id}", produces = "application/json")
+	@PostMapping(value = "/Id", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> getFeedById(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@PathVariable("id") String id) {
+			@RequestBody APIRequest apiRequest) {
 		logger.info("Calling getById Feed API...");
 		String message = "";
 		String activityType = "Find Feed by Id";
@@ -123,7 +123,7 @@ public class FeedController {
 
 		try {
 
-			String feedId = GeneralUtility.makeNotNull(id);
+			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId().trim());
 			logger.info("feedId: " + feedId);
 			if (!GeneralUtility.makeNotNull(feedId).equals("")) {
 				FeedDTO feedDTO = feedService.findByFeedId(feedId);
