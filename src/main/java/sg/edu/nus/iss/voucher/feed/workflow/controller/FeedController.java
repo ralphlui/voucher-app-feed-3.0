@@ -156,7 +156,7 @@ public class FeedController {
 		}
 	}
 
-	@PostMapping(value = "/readStatus", produces = "application/json")
+	@PatchMapping(value = "/readStatus", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> patchFeedReadStatus(
 			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
 			@RequestBody FeedRequest apiRequest) {
@@ -165,7 +165,7 @@ public class FeedController {
 		String message = "";
 		String activityType = "Update Feed Status";
 		String endpoint = "/api/feeds/readStatus";
-		HTTPVerb httpMethod = HTTPVerb.POST;
+		HTTPVerb httpMethod = HTTPVerb.PATCH;
 
 		String tokenUserId = "Invalid UserID";
 

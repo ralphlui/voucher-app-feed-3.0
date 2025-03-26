@@ -155,11 +155,11 @@ public class FeedControllerTest {
 		apiRequest.setFeedId(feedId);
 
 		when(auditService.createAuditDTO(userId, "Update Feed Status", activityTypePrefix,
-				"/api/feeds/readStatus", HTTPVerb.POST)).thenReturn(auditDTO);
+				"/api/feeds/readStatus", HTTPVerb.PATCH)).thenReturn(auditDTO);
 
 		when(feedService.updateReadStatusById(feedId)).thenReturn(feedDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/readStatus")
+		mockMvc.perform(MockMvcRequestBuilders.patch("/api/feeds/readStatus")
 				.header("Authorization", authorizationHeader)
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
