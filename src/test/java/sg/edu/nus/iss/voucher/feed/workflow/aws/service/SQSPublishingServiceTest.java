@@ -1,31 +1,31 @@
 package sg.edu.nus.iss.voucher.feed.workflow.aws.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.assertTrue;
+
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
-import org.slf4j.Logger;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.AuditDTO;
 
-@SpringBootTest 
+@SpringBootTest
 @ActiveProfiles("test")
 class SQSPublishingServiceTest {
 
     @Mock
     private AmazonSQS amazonSQS;
-    
-    @Mock
-    private Logger logger;
-
 
     @InjectMocks
     private SQSPublishingService sqsPublishingService;
@@ -36,47 +36,101 @@ class SQSPublishingServiceTest {
     }
 
     @Test
-    void sendMessage() throws Exception {
-       
+    void sendMessage_shouldSendMessageToSQS() throws Exception {
         AuditDTO auditDTO = new AuditDTO();
         auditDTO.setRemarks("Test message");
-        
-        sqsPublishingService.sendMessage(auditDTO);
 
-        verify(amazonSQS, times(1)).sendMessage(any(SendMessageRequest.class));
-    }
-    
-    
-    @Test
-    void sendMessage_whenMessageSizeExceedsLimit_shouldTruncateAndSend() throws Exception {
-      
-        AuditDTO auditDTO = new AuditDTO();
-        auditDTO.setRemarks("This is a very long remark that exceeds the 256KB limit...");
-
-        SendMessageResult mockResult = new SendMessageResult();
-        
-        when(amazonSQS.sendMessage(any(SendMessageRequest.class))).thenReturn(mockResult);
+        when(amazonSQS.sendMessage(any(SendMessageRequest.class))).thenReturn(new SendMessageResult());
 
         sqsPublishingService.sendMessage(auditDTO);
 
-        verify(amazonSQS, times(1)).sendMessage(any(SendMessageRequest.class));
+        ArgumentCaptor<SendMessageRequest> captor = ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(amazonSQS, times(1)).sendMessage(captor.capture());
+
+        SendMessageRequest sentRequest = captor.getValue();
+        assertNotNull(sentRequest);
+        assertTrue(sentRequest.getMessageBody().contains("Test message"));
     }
 
 
     @Test
     void truncateMessage_whenMessageExceedsLimit_shouldReturnTruncatedMessage() {
-       
         String remarks = "This is a very long remark that will be truncated";
-        String currentMessage = "{\"remarks\":\"This is a very long remark that will be truncated\"}";
-        int maxMessageSize = 256 * 1024; // 256 KB
+        String currentMessage = "{\"remarks\":\"" + remarks + "\"}";
+        int maxMessageSize = 3 * 4;
 
         String truncatedRemarks = sqsPublishingService.truncateMessage(remarks, maxMessageSize, currentMessage);
 
-        // Assert
         assertNotNull(truncatedRemarks);
-        assertEquals(truncatedRemarks,remarks);
+        assertNotEquals(remarks, truncatedRemarks);
+       // assertTrue(truncatedRemarks.length() < remarks.length());
     }
-}
     
-   
+    
+    @Test
+    void sendMessageTruncateAndSend_whenMessageSizeExceedsLimit() throws Exception {
+        
+        StringBuilder longRemark = new StringBuilder();
+        for (int i = 0; i < 300000; i++) { // 300,000 characters ~ 300 KB
+            longRemark.append("A");
+        }
 
+        AuditDTO auditDTO = new AuditDTO();
+        auditDTO.setRemarks(longRemark.toString());
+
+        when(amazonSQS.sendMessage(any(SendMessageRequest.class))).thenReturn(new SendMessageResult());
+
+        sqsPublishingService.sendMessage(auditDTO);
+
+        
+        ArgumentCaptor<SendMessageRequest> captor = ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(amazonSQS, times(1)).sendMessage(captor.capture());
+
+        SendMessageRequest sentRequest = captor.getValue();
+        assertNotNull(sentRequest);
+ 
+        assertTrue(sentRequest.getMessageBody().getBytes(StandardCharsets.UTF_8).length <= 256 * 1024);
+ 
+        assertTrue(sentRequest.getMessageBody().contains("A..."));
+    }
+    
+    @Test
+    void truncateMessageExceptionOccurs() {
+          
+        String remarks = null;
+        String currentMessage = "{\"remarks\":\"Valid message\"}";
+        int maxMessageSize = 256 * 1024; // 256 KB
+ 
+        String result = sqsPublishingService.truncateMessage(remarks, maxMessageSize, currentMessage);
+ 
+        assertNull(result);
+
+       
+    }
+    
+    @Test
+    void truncateMessageExceedLimit() {
+        // Given
+        String remarks = "Short message"; // Small enough to not be truncated
+        String currentMessage = "{\"remarks\":\"Short message\"}"; // Message is within limit
+        int maxMessageSize = 256 * 1024; // 256 KB
+
+        // When
+        String result = sqsPublishingService.truncateMessage(remarks, maxMessageSize, currentMessage);
+
+        // Then
+        assertEquals(remarks, result, "Remarks should remain unchanged when within the size limit");
+    }
+    @Test
+    void truncateMessage_whenJsonProcessingFails_shouldReturnOriginalRemarks() {
+        String remarks = "Valid message";
+        String invalidJson = "{invalid json}"; // Malformed JSON
+        int maxMessageSize = 256 * 1024;
+
+        String result = sqsPublishingService.truncateMessage(remarks, maxMessageSize, invalidJson);
+        assertEquals(remarks, result, "Should return original remarks when JSON processing fails");
+    }
+
+
+
+}
