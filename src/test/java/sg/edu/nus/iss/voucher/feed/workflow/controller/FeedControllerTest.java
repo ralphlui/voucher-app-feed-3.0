@@ -25,19 +25,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
- 
+
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
-import sg.edu.nus.iss.voucher.feed.workflow.dto.*; 
+import sg.edu.nus.iss.voucher.feed.workflow.dto.*;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.HTTPVerb;
 import sg.edu.nus.iss.voucher.feed.workflow.jwt.JWTService;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 import sg.edu.nus.iss.voucher.feed.workflow.service.impl.AuditService;
 import sg.edu.nus.iss.voucher.feed.workflow.service.impl.FeedService;
+import sg.edu.nus.iss.voucher.feed.workflow.utility.GeneralUtility;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,8 +45,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 public class FeedControllerTest {
 
 	@Autowired
-	private MockMvc mockMvc;	
-	
+	private MockMvc mockMvc;
+
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -72,8 +72,8 @@ public class FeedControllerTest {
 	private static AuditDTO auditDTO;
 	static String userId = "user123";
 	static String authorizationHeader = "Bearer mock.jwt.token";
-	
-	private static FeedRequest apiRequest = new FeedRequest( "1", "1", userId);
+
+	private static FeedRequest apiRequest = new FeedRequest("1", "1", userId);
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -118,15 +118,57 @@ public class FeedControllerTest {
 		when(auditService.createAuditDTO(userId, "Feed List by User", activityTypePrefix, "/api/feeds/users",
 				HTTPVerb.POST)).thenReturn(auditDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users")
-				.header("Authorization", authorizationHeader).param("page", String.valueOf(page))
-				.param("size", String.valueOf(size))
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users").header("Authorization", authorizationHeader)
+				.param("page", String.valueOf(page)).param("size", String.valueOf(size))
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
-		 		.andExpect(status().isOk())
-				.andExpect(jsonPath("$.data").isArray()).andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.data").isArray())
+				.andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
 				.andExpect(jsonPath("$.message").value("Successfully get all feeds by Users"))
 				.andExpect(jsonPath("$.totalRecord").value(10)).andDo(print());
 
+		resultMap = new HashMap<>();
+
+		when(feedService.getFeedsByUserWithPagination(userId, page, size)).thenReturn(resultMap);
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users").header("Authorization", authorizationHeader)
+				.param("page", String.valueOf(page)).param("size", String.valueOf(size))
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.data").isArray())
+				.andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
+				.andExpect(jsonPath("$.message").value("Feeds not found."))
+				.andExpect(jsonPath("$.totalRecord").value(0)).andDo(print());
+
+		apiRequest.setUserId("");
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users").header("Authorization", authorizationHeader)
+				.param("page", String.valueOf(page)).param("size", String.valueOf(size))
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Bad Request:User could not be blank.")).andDo(print());
+
+		apiRequest.setUserId("123");
+		auditDTO = new AuditDTO();
+
+		String message = "An unexpected error occurred. Please contact support.";
+
+		auditDTO.setRemarks(message);
+
+		doNothing().when(auditService).logAudit(any(AuditDTO.class), eq(500), anyString(), eq(authorizationHeader));
+
+		when(auditService.createAuditDTO(anyString(), anyString(), anyString(), anyString(), any()))
+				.thenReturn(auditDTO); // Ensure a non-null AuditDTO is returned
+
+		when(feedService.getFeedsByUserWithPagination(anyString(), anyInt(), anyInt()))
+				.thenThrow(new RuntimeException("Unexpected error occurred"));
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/users").header("Authorization", authorizationHeader)
+				.param("page", String.valueOf(page)).param("size", String.valueOf(size))
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isInternalServerError())
+				.andExpect(jsonPath("$.message").value("An unexpected error occurred. Please contact support."))
+				.andDo(print());
+
+		// Verify audit logging was called
+		verify(auditService, times(1)).logAudit(any(AuditDTO.class), eq(500), anyString(), eq(authorizationHeader));
 	}
 
 	@Test
@@ -134,18 +176,57 @@ public class FeedControllerTest {
 		String feedId = "123";
 		apiRequest.setFeedId(feedId);
 
-		when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix, "/api/feeds/Id",
-				HTTPVerb.POST)).thenReturn(auditDTO);
+		when(auditService.createAuditDTO(userId, "Find Feed by Id", activityTypePrefix, "/api/feeds/Id", HTTPVerb.POST))
+				.thenReturn(auditDTO);
 
 		when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id")
-				.header("Authorization", authorizationHeader)
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id").header("Authorization", authorizationHeader)
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
 				.andExpect(jsonPath("$.data.feedId").value(feedId))
 				.andExpect(jsonPath("$.message").value("Feed get successfully.")).andDo(print());
+
+		feedDTO = new FeedDTO();
+		when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id").header("Authorization", authorizationHeader)
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isNotFound()).andExpect(jsonPath("$.success").value("false"))
+				.andExpect(jsonPath("$.message").value("Feed not found for Id: " + feedId)).andDo(print());
+
+		apiRequest.setFeedId("");
+		feedDTO = new FeedDTO();
+		when(feedService.findByFeedId(apiRequest.getFeedId())).thenReturn(feedDTO);
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id").header("Authorization", authorizationHeader)
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value("false"))
+				.andExpect(jsonPath("$.message").value("Bad Request:FeedId could not be blank.")).andDo(print());
+
+		apiRequest.setFeedId("123");
+		auditDTO = new AuditDTO();
+
+		String message = "An unexpected error occurred. Please contact support.";
+
+		auditDTO.setRemarks(message);
+
+		doNothing().when(auditService).logAudit(any(AuditDTO.class), eq(500), anyString(), eq(authorizationHeader));
 		
+		when(feedService.findByFeedId(anyString()))
+		.thenThrow(new RuntimeException("Unexpected error occurred"));
+		
+		when(auditService.createAuditDTO(anyString(), anyString(), anyString(), anyString(), any()))
+				.thenReturn(auditDTO);
+
+		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id").header("Authorization", authorizationHeader)
+				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isInternalServerError())
+				.andExpect(jsonPath("$.message").value("An unexpected error occurred. Please contact support."))
+				.andDo(print());
+
+		// Verify audit logging was called
+		verify(auditService, times(1)).logAudit(any(AuditDTO.class), eq(500), anyString(), eq(authorizationHeader));
+
 	}
 
 	@Test
@@ -154,19 +235,59 @@ public class FeedControllerTest {
 		feedDTO.setIsReaded("1");
 		apiRequest.setFeedId(feedId);
 
-		when(auditService.createAuditDTO(userId, "Update Feed Status", activityTypePrefix,
-				"/api/feeds/readStatus", HTTPVerb.PATCH)).thenReturn(auditDTO);
+		when(auditService.createAuditDTO(userId, "Update Feed Status", activityTypePrefix, "/api/feeds/readStatus",
+				HTTPVerb.PATCH)).thenReturn(auditDTO);
 
 		when(feedService.updateReadStatusById(feedId)).thenReturn(feedDTO);
 
-		mockMvc.perform(MockMvcRequestBuilders.patch("/api/feeds/readStatus")
-				.header("Authorization", authorizationHeader)
-				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+		mockMvc.perform(
+				MockMvcRequestBuilders.patch("/api/feeds/readStatus").header("Authorization", authorizationHeader)
+						.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
 				.andExpect(jsonPath("$.data.feedId").value(feedId))
 				.andExpect(jsonPath("$.message").value("Read status updated successfully for Id: " + feedId));
 
-		//verify(auditService).logAudit(auditDTO, 200, "Read status updated successfully for Id: " + feedId,authorizationHeader);
+		feedDTO = new FeedDTO();
+		when(feedService.updateReadStatusById(feedId)).thenReturn(feedDTO);
+		mockMvc.perform(
+				MockMvcRequestBuilders.patch("/api/feeds/readStatus").header("Authorization", authorizationHeader)
+						.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isNotFound()).andExpect(jsonPath("$.success").value("false"))
+				.andExpect(jsonPath("$.message").value("Feed not found for Id: " + feedId));
+
+		apiRequest.setFeedId("");
+		when(apiRequest.getFeedId()).thenReturn("");
+
+		mockMvc.perform(
+				MockMvcRequestBuilders.patch("/api/feeds/readStatus").header("Authorization", authorizationHeader)
+						.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value("false"))
+				.andExpect(jsonPath("$.message").value("Bad Request:FeedId could not be blank."));
+		
+		
+		apiRequest.setFeedId("123");
+		
+		auditDTO = new AuditDTO();
+
+		String message = "An unexpected error occurred. Please contact support.";
+
+		auditDTO.setRemarks(message);
+
+		doNothing().when(auditService).logAudit(any(AuditDTO.class), eq(500), anyString(), eq(authorizationHeader));
+		when(feedService.updateReadStatusById(feedId)).thenThrow(new RuntimeException("Unexpected error"));
+
+		when(auditService.createAuditDTO(anyString(), anyString(), anyString(), anyString(), any()))
+				.thenReturn(auditDTO);
+		
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/feeds/readStatus")
+                .header("Authorization", authorizationHeader)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(apiRequest)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("An unexpected error occurred. Please contact support."));
+
+       
 	}
 
 }

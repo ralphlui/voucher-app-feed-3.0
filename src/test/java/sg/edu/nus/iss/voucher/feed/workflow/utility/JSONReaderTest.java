@@ -1,116 +1,148 @@
 package sg.edu.nus.iss.voucher.feed.workflow.utility;
 
-import org.json.simple.JSONArray;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sqs.AmazonSQS;
-
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 import java.util.ArrayList;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
-public class JSONReaderTest {
-	
-	@MockBean
-    private AmazonSNS amazonSNS;
+class JSONReaderTest {
 
-    @MockBean
-    private AmazonSQS amazonSQS;
+    @Mock
+    private AuthAPICall apiCall;
 
-
-    @Autowired
+    @InjectMocks
     private JSONReader jsonReader;
 
-    @MockBean
-    private AuthAPICall apiCall;
-    
-    static String userId ="1";
-    
-    private static final String PAGE_MAX_SIZE = "10";
-    
-    static String authorizationHeader = "Bearer mock.jwt.token";
-
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        jsonReader.pageMaxSize = "10"; 
     }
 
     @Test
-    public void testReadFeedMessage() {
-    	JSONObject campaign = new JSONObject();
-        campaign.put("campaignId", "123");
-        campaign.put("description", "Happy Hour");
-
-        JSONObject store = new JSONObject();
-        store.put("storeId", "456");
-        store.put("name", "MUJI");
-
-        JSONObject message = new JSONObject();
-        message.put("email", "tester@gmail.com");
-        message.put("campaign", campaign);
-        message.put("store", store);
-
-        String messageString = message.toString();
-        MessagePayload result = jsonReader.readFeedMessage(messageString);
-
-        assertNotNull(result);
-        assertEquals("tester@gmail.com", result.getEmail(), "Email mismatch");
-        assertEquals("123", result.getCampaignId(), "Campaign ID mismatch");
-        assertEquals("Happy Hour", result.getCampaignDescription(), "Campaign description mismatch");
-        assertEquals("456", result.getStoreId(), "Store ID mismatch");
-        assertEquals("MUJI", result.getStoreName(), "Store name mismatch");
+    void readFeedMessage_shouldReturnMessagePayload_whenValidMessage() throws ParseException {
     
+        String message = "{\"email\":\"test@example.com\", \"campaign\":{\"campaignId\":\"123\", \"description\":\"Campaign 1\"}, \"store\":{\"storeId\":\"456\", \"name\":\"Store A\"}}";
+        MessagePayload expected = new MessagePayload();
+        expected.setEmail("test@example.com");
+        expected.setCampaignId("123");
+        expected.setCampaignDescription("Campaign 1");
+        expected.setStoreId("456");
+        expected.setStoreName("Store A");
+ 
+        MessagePayload result = jsonReader.readFeedMessage(message);
+ 
+        assertEquals(expected.getEmail(), result.getEmail());
+        assertEquals(expected.getCampaignId(), result.getCampaignId());
+        assertEquals(expected.getCampaignDescription(), result.getCampaignDescription());
+        assertEquals(expected.getStoreId(), result.getStoreId());
+        assertEquals(expected.getStoreName(), result.getStoreName());
     }
+
+  
+    @Test
+    void getActiveUser_shouldReturnUsername_whenValidResponse() throws Exception {
+     
+        String userId = "1";
+        String token = "valid_token";
+        String apiResponse = "{\"data\": {\"username\": \"User1\"}}";
+        when(apiCall.getActiveUser(userId, token)).thenReturn(apiResponse);
+ 
+        String userName = jsonReader.getActiveUser(userId, token);
+ 
+        assertEquals("User1", userName);
+    }
+
+    @Test
+    void getAccessToken_shouldReturnToken_whenValidResponse() throws Exception {
+   
+        String email = "user@example.com";
+        String apiResponse = "{\"data\": {\"token\": \"valid-token\"}}";
+        when(apiCall.getAccessToken(email)).thenReturn(apiResponse);
+ 
+        String token = jsonReader.getAccessToken(email);
+ 
+        assertEquals("valid-token", token);
+    }
+
+    @Test
+    void getActiveUserDetails_shouldReturnUserDetails_whenValidResponse() throws Exception {
+       
+        String userId = "1";
+        String token = "valid_token";
+        String apiResponse = "{\"data\": {\"username\": \"User1\", \"email\": \"user1@example.com\", \"role\": \"admin\"}}";
+        when(apiCall.getActiveUser(userId, token)).thenReturn(apiResponse);
+ 
+        User user = jsonReader.getActiveUserDetails(userId, token);
+ 
+        assertEquals("User1", user.getUsername());
+        assertEquals("user1@example.com", user.getEmail());
+        assertEquals("admin", user.getRole());
+    }
+
+    @Test
+    void getMessageFromResponse_shouldReturnMessage_whenValidResponse() {
+  
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("message", "Success");
+ 
+        String message = jsonReader.getMessageFromResponse(jsonResponse);
+ 
+        assertEquals("Success", message);
+    }
+
+    @Test
+    void getSuccessFromResponse_shouldReturnSuccessFlag_whenValidResponse() {
+       
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("success", true);
+ 
+        Boolean success = jsonReader.getSuccessFromResponse(jsonResponse);
+ 
+        assertTrue(success);
+    }
+
     
     
     @Test
-    public void testGetActiveUsers() {
-    	
-    	 // Prepare mock responses
-        JSONObject page1Response = new JSONObject();
-        page1Response.put("totalRecord", 5L);
-        JSONArray dataArrayPage1 = new JSONArray();
+    void testGetAllActiveUsers_withValidPageMaxSize() {
+       
+        String token = "valid_token";
+        String apiResponse = "{"
+                + "\"totalRecord\": 3,"
+                + "\"data\": ["
+                + "{ \"userID\": \"1\", \"email\": \"user1@example.com\", \"username\": \"user1\" },"
+                + "{ \"userID\": \"2\", \"email\": \"user2@example.com\", \"username\": \"user2\" },"
+                + "{ \"userID\": \"3\", \"email\": \"user3@example.com\", \"username\": \"user3\" }"
+                + "]"
+                + "}";
 
-        // Create user objects for page 1
-        JSONObject user1 = new JSONObject();
-        user1.put("userID", "1");
-        user1.put("email", "user1@example.com");
-        user1.put("username", "User One");
-
-        JSONObject user2 = new JSONObject();
-        user2.put("userID", "2");
-        user2.put("email", "user2@example.com");
-        user2.put("username", "User Two");
-
-        dataArrayPage1.add(user1);
-        dataArrayPage1.add(user2);
-        page1Response.put("data", dataArrayPage1);
-        
-        when(apiCall.getAllActiveUsers(authorizationHeader, 0, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
-        when(apiCall.getAllActiveUsers(authorizationHeader, 1, Integer.parseInt(PAGE_MAX_SIZE))).thenReturn(page1Response.toJSONString());
-        
-        ArrayList<User> users = jsonReader.getAllActiveUsers(authorizationHeader);
-
-        assertEquals(2, users.size());
+        when(apiCall.getAllActiveUsers(eq(token), anyInt(), anyInt())).thenReturn(apiResponse);
+ 
+        jsonReader.pageMaxSize = "2";
+ 
+        ArrayList<User> users = jsonReader.getAllActiveUsers(token);
+ 
+        assertNotNull(users);
+        assertEquals(6, users.size());
         assertEquals("user1@example.com", users.get(0).getEmail());
         assertEquals("user2@example.com", users.get(1).getEmail());
+        assertEquals("user3@example.com", users.get(2).getEmail());
+ 
+        verify(apiCall, times(2)).getAllActiveUsers(eq(token), anyInt(), anyInt());
     }
 
-
+   
 
 }
