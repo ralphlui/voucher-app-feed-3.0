@@ -96,7 +96,7 @@ public class FeedService implements IFeedService {
 
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error("Updating Feed Status by feedId exception... {}", ex.toString());
 
 		}

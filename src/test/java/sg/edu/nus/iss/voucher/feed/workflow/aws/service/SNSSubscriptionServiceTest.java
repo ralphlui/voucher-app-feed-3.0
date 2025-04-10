@@ -9,7 +9,6 @@ import sg.edu.nus.iss.voucher.feed.workflow.dao.FeedDAO;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.Feed;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
-import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 import sg.edu.nus.iss.voucher.feed.workflow.strategy.impl.EmailStrategy;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;

@@ -1,7 +1,6 @@
 package sg.edu.nus.iss.voucher.feed.workflow.utility;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,9 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
-import sg.edu.nus.iss.voucher.feed.workflow.entity.Feed;
+
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
-import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 @Component
