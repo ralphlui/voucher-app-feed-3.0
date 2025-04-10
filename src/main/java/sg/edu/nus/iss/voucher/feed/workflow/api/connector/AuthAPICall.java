@@ -29,6 +29,8 @@ public class AuthAPICall {
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthAPICall.class);
 	
+	private static final String UTF_8 = "UTF-8";
+
 	
 	public String getActiveUser(String userId,String authorizationHeader ) {
 	    String responseStr = "";
@@ -54,7 +56,7 @@ public class AuthAPICall {
 	        CloseableHttpResponse httpResponse = httpClient.execute(request);
 	        try {
 	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
-	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
+	            responseStr = new String(responseByteArray, Charset.forName(UTF_8));
 	            logger.info("getSpeicficActiveUsers: " + responseStr);
 	        } catch (Exception e) {
 	            e.printStackTrace();
@@ -76,85 +78,67 @@ public class AuthAPICall {
 	
 
 	
-	public String getAllActiveUsers(String authorizationHeader,int page, int size) {
+	public String getAllActiveUsers(String authorizationHeader, int page, int size) {
+	    String url = authURL.trim() + "?page=" + page + "&size=" + size;
+	    logger.info("getAllActiveUsers url : {}", url);
+
+	    RequestConfig config = RequestConfig.custom()
+	            .setConnectTimeout(30000)
+	            .setConnectionRequestTimeout(30000)
+	            .setSocketTimeout(30000)
+	            .build();
+
 	    String responseStr = "";
-	   
-	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
-	        String url = authURL.trim()  + "?page=" + page + "&size=" + size;
-	        logger.info("getAllActiveUsers url : " + url);
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-	        HttpGet request = new HttpGet(url);
-	        request.setHeader("Authorization", authorizationHeader);
-	        CloseableHttpResponse httpResponse = httpClient.execute(request);
-	        try {
-	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
-	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
-	            logger.info("getAllActiveUsers: " + responseStr);
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            logger.error("getAllActiveUsers exception... {}", e.toString());
-	        } finally {
-	            try {
-	                httpResponse.close();
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	                logger.error("getAllActiveUsers exception... {}", e.toString());
-	            }
-	        }
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	        logger.error("getAllActiveUsers exception... {}", ex.toString());
+
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+	         CloseableHttpResponse httpResponse = httpClient.execute(createHttpGet(url, authorizationHeader))) {
+
+	        byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
+	        responseStr = new String(responseByteArray, Charset.forName(UTF_8));
+	        logger.info("getAllActiveUsers response: {}", responseStr);
+
+	    } catch (IOException e) {
+	        logger.error("getAllActiveUsers exception: {}", e.toString(), e);
 	    }
+
 	    return responseStr;
 	}
+
+	private HttpGet createHttpGet(String url, String authorizationHeader) {
+	    HttpGet request = new HttpGet(url);
+	    request.setHeader("Authorization", authorizationHeader);
+	    return request;
+	}
 	
-	public String getAccessToken(String email ) {
+	public String getAccessToken(String email) {
 	    String responseStr = "";
-	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
-	    	 
-	        String url = authURL.trim() + "/accessToken";
-	        logger.info("getAccessToken url : " + url);
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+	    String url = authURL.trim() + "/accessToken";
+	    logger.info("getAccessToken url: {}", url);
+
+	    RequestConfig config = RequestConfig.custom()
+	            .setConnectTimeout(30000)
+	            .setConnectionRequestTimeout(30000)
+	            .setSocketTimeout(30000)
+	            .build();
+
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build()) {
 	        HttpPost request = new HttpPost(url);
 	        request.setHeader("Content-Type", "application/json");
-	        
-	        StringEntity entity = new StringEntity("{\"email\":\"" + email + "\"}", Charset.forName("UTF-8"));
+
+	        String jsonPayload = String.format("{\"email\":\"%s\"}", email);
+	        StringEntity entity = new StringEntity(jsonPayload, Charset.forName(UTF_8));
 	        request.setEntity(entity);
 
-	        CloseableHttpResponse httpResponse = httpClient.execute(request);
-	        try {
-	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
-	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
-	            logger.info("getAccessToken: " + responseStr);
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            logger.error("getAccessToken exception... {}", e.toString());
-	        } finally {
-	            try {
-	                httpResponse.close();
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	                logger.error("getAccessToken exception... {}", e.toString());
-	            }
+	        try (CloseableHttpResponse httpResponse = httpClient.execute(request)) {
+	            byte[] responseBytes = EntityUtils.toByteArray(httpResponse.getEntity());
+	            responseStr = new String(responseBytes, Charset.forName(UTF_8));
+	            logger.info("getAccessToken response: {}", responseStr);
 	        }
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	        logger.error("getAccessToken exception... {}", ex.toString());
+
+	    } catch (Exception e) {
+	        logger.error("getAccessToken exception: {}", e.toString(), e);
 	    }
+
 	    return responseStr;
 	}
 	
