@@ -18,7 +18,5 @@ public class FeedDTO {
 	private String userName="";
 	private String category="";
 
-	public FeedDTO() {
-	}
 
 }
