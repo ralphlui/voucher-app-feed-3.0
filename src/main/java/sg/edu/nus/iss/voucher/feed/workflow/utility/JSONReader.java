@@ -29,6 +29,10 @@ public class JSONReader {
 	AuthAPICall apiCall;
 
 	private static final Logger logger = LoggerFactory.getLogger(JSONReader.class);
+	
+	private static final String EMAIL_KEY = "email";
+	private static final String USERNAME_KEY = "username";
+
 
 	public MessagePayload readFeedMessage(String message) {
 		MessagePayload feedMsg = new MessagePayload();
@@ -37,7 +41,7 @@ public class JSONReader {
 			JSONObject messageObject = (JSONObject) new JSONParser().parse(message);
 			if (messageObject != null) {
 
-				String email = (String) messageObject.get("email");
+				String email = (String) messageObject.get(EMAIL_KEY);
 
 				JSONObject campaign = (JSONObject) messageObject.get("campaign");
 				String campaignId = (String) campaign.get("campaignId");
@@ -90,8 +94,8 @@ public class JSONReader {
 					logger.info("User: " + user.toJSONString());
 
 					String userId = GeneralUtility.makeNotNull(user.get("userID").toString());
-					String email = GeneralUtility.makeNotNull(user.get("email").toString());
-					String username = GeneralUtility.makeNotNull(user.get("username").toString());
+					String email = GeneralUtility.makeNotNull(user.get(EMAIL_KEY).toString());
+					String username = GeneralUtility.makeNotNull(user.get(USERNAME_KEY).toString());
 
 					if (!email.isEmpty()) {
 						User var = new User();
@@ -125,7 +129,7 @@ public class JSONReader {
 			JSONObject data = (JSONObject) jsonResponse.get("data");
 			logger.info("User: " + data.toJSONString());
 
-			userName = GeneralUtility.makeNotNull(data.get("username").toString());
+			userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
 
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -171,8 +175,8 @@ public class JSONReader {
 			JSONObject data = (JSONObject) jsonResponse.get("data");
 			logger.info("User: " + data.toJSONString());
 			if (data != null) {
-				String userName = GeneralUtility.makeNotNull(data.get("username").toString());
-				String email = GeneralUtility.makeNotNull(data.get("email").toString());
+				String userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
+				String email = GeneralUtility.makeNotNull(data.get(EMAIL_KEY).toString());
 				String role = GeneralUtility.makeNotNull(data.get("role").toString());
 				var.setUserId(userId);
 				var.setEmail(email);
