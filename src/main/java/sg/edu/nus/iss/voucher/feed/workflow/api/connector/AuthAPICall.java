@@ -28,6 +28,8 @@ public class AuthAPICall {
     private String authURL;
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthAPICall.class);
+	private static final String GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG = "getSpecificActiveUsers exception... {}";
+
 	
 	private static final String UTF_8 = "UTF-8";
 
@@ -56,22 +58,24 @@ public class AuthAPICall {
 	        CloseableHttpResponse httpResponse = httpClient.execute(request);
 	        try {
 	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
+
 	            responseStr = new String(responseByteArray, Charset.forName(UTF_8));
-	            logger.info("getSpeicficActiveUsers: " + responseStr);
+	            logger.info("getSpeicficActiveUsers: {}", responseStr);
+
 	        } catch (Exception e) {
 	            e.printStackTrace();
-	            logger.error("getSpeicficActiveUsers exception... {}", e.toString());
+	            logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, e.toString());
 	        } finally {
 	            try {
 	                httpResponse.close();
 	            } catch (IOException e) {
 	                e.printStackTrace();
-	                logger.error("getSpeicficActiveUsers exception... {}", e.toString());
+	                logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, e.toString());
 	            }
 	        }
 	    } catch (Exception ex) {
 	        ex.printStackTrace();
-	        logger.error("getSpeicficActiveUsers exception... {}", ex.toString());
+	        logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, ex.toString());
 	    }
 	    return responseStr;
 	}
@@ -90,6 +94,7 @@ public class AuthAPICall {
 
 	    String responseStr = "";
 
+
 	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	         CloseableHttpResponse httpResponse = httpClient.execute(createHttpGet(url, authorizationHeader))) {
 
@@ -99,6 +104,7 @@ public class AuthAPICall {
 
 	    } catch (IOException e) {
 	        logger.error("getAllActiveUsers exception: {}", e.toString(), e);
+
 	    }
 
 	    return responseStr;
