@@ -42,6 +42,9 @@ public class FeedController {
 
 	@Value("${audit.activity.type.prefix}")
 	String activityTypePrefix;
+	
+	private static final String INVALID_USER_ID = "Invalid UserID";
+
 
 	@PostMapping(value = "/users", produces = "application/json")
 	public ResponseEntity<APIResponse<List<FeedDTO>>> getByUserId(
@@ -56,9 +59,7 @@ public class FeedController {
 		String endpoint = "/api/feeds/users/";
 		HTTPVerb httpMethod = HTTPVerb.POST;
 
-		String tokenUserId = "Invalid UserID";
-
-		AuditDTO auditDTO = auditService.createAuditDTO(tokenUserId, activityType, activityTypePrefix, endpoint,
+		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
 				httpMethod);
 
 		try {
@@ -116,9 +117,7 @@ public class FeedController {
 		String endpoint = "/api/feeds/";
 		HTTPVerb httpMethod = HTTPVerb.POST;
 
-		String tokenUserId = "Invalid UserID";
-
-		AuditDTO auditDTO = auditService.createAuditDTO(tokenUserId, activityType, activityTypePrefix, endpoint,
+		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
 				httpMethod);
 
 		try {
@@ -167,9 +166,7 @@ public class FeedController {
 		String endpoint = "/api/feeds/readStatus";
 		HTTPVerb httpMethod = HTTPVerb.PATCH;
 
-		String tokenUserId = "Invalid UserID";
-
-		AuditDTO auditDTO = auditService.createAuditDTO(tokenUserId, activityType, activityTypePrefix, endpoint,
+		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
 				httpMethod);
 
 		try {
