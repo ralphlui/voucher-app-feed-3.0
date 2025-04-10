@@ -32,6 +32,8 @@ import sg.edu.nus.iss.voucher.feed.workflow.utility.*;
 @RequestMapping("/api/feeds")
 public class FeedController {
 	private static final Logger logger = LoggerFactory.getLogger(FeedController.class);
+	private static final String UNEXPECTED_ERROR = "An unexpected error occurred. Please contact support.";
+
 
 	@Autowired
 	private FeedService feedService;
@@ -98,7 +100,7 @@ public class FeedController {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			message = "An unexpected error occurred. Please contact support.";
+			message = UNEXPECTED_ERROR;
 			logger.error(message);
 			auditDTO.setRemarks(e.toString());
 			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
@@ -148,7 +150,7 @@ public class FeedController {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			message = "An unexpected error occurred. Please contact support.";
+			message =UNEXPECTED_ERROR;
 			logger.error(message + e.toString());
 			auditDTO.setRemarks(e.toString());
 			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
@@ -198,7 +200,7 @@ public class FeedController {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			message = "An unexpected error occurred. Please contact support.";
+			message = UNEXPECTED_ERROR;
 			logger.error(message + e.toString());
 			auditDTO.setRemarks(e.toString());
 			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
