@@ -28,6 +28,8 @@ public class AuthAPICall {
     private String authURL;
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthAPICall.class);
+	private static final String GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG = "getSpecificActiveUsers exception... {}";
+
 	
 	
 	public String getActiveUser(String userId,String authorizationHeader ) {
@@ -55,21 +57,21 @@ public class AuthAPICall {
 	        try {
 	            byte[] responseByteArray = EntityUtils.toByteArray(httpResponse.getEntity());
 	            responseStr = new String(responseByteArray, Charset.forName("UTF-8"));
-	            logger.info("getSpeicficActiveUsers: " + responseStr);
+	            logger.info("getSpeicficActiveUsers: {}", responseStr);
 	        } catch (Exception e) {
 	            e.printStackTrace();
-	            logger.error("getSpeicficActiveUsers exception... {}", e.toString());
+	            logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, e.toString());
 	        } finally {
 	            try {
 	                httpResponse.close();
 	            } catch (IOException e) {
 	                e.printStackTrace();
-	                logger.error("getSpeicficActiveUsers exception... {}", e.toString());
+	                logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, e.toString());
 	            }
 	        }
 	    } catch (Exception ex) {
 	        ex.printStackTrace();
-	        logger.error("getSpeicficActiveUsers exception... {}", ex.toString());
+	        logger.error(GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG, ex.toString());
 	    }
 	    return responseStr;
 	}
@@ -80,16 +82,17 @@ public class AuthAPICall {
 	    String responseStr = "";
 	   
 	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
+	    RequestConfig config = RequestConfig.custom()
+	            .setConnectTimeout(30000)
+	            .setConnectionRequestTimeout(30000)
+	            .setSocketTimeout(30000)
+	            .build();
+
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+	            .setDefaultRequestConfig(config)
+	            .build()) {
 	        String url = authURL.trim()  + "?page=" + page + "&size=" + size;
 	        logger.info("getAllActiveUsers url : " + url);
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	        HttpGet request = new HttpGet(url);
 	        request.setHeader("Authorization", authorizationHeader);
 	        CloseableHttpResponse httpResponse = httpClient.execute(request);
