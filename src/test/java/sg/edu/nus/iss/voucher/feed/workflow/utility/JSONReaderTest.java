@@ -113,36 +113,70 @@ class JSONReaderTest {
         assertTrue(success);
     }
 
-    
-    
+
+
     @Test
     void testGetAllActiveUsers_withValidPageMaxSize() {
-       
+        jsonReader.pageMaxSize = "2"; // simulate @Value injection
+
         String token = "valid_token";
-        String apiResponse = "{"
+
+        String responsePage0 = "{"
                 + "\"totalRecord\": 3,"
                 + "\"data\": ["
                 + "{ \"userID\": \"1\", \"email\": \"user1@example.com\", \"username\": \"user1\" },"
-                + "{ \"userID\": \"2\", \"email\": \"user2@example.com\", \"username\": \"user2\" },"
+                + "{ \"userID\": \"2\", \"email\": \"user2@example.com\", \"username\": \"user2\" }"
+                + "]"
+                + "}";
+
+        String responsePage1 = "{"
+                + "\"totalRecord\": 3,"
+                + "\"data\": ["
                 + "{ \"userID\": \"3\", \"email\": \"user3@example.com\", \"username\": \"user3\" }"
                 + "]"
                 + "}";
 
-        when(apiCall.getAllActiveUsers(eq(token), anyInt(), anyInt())).thenReturn(apiResponse);
- 
-        jsonReader.pageMaxSize = "2";
- 
+        when(apiCall.getAllActiveUsers(token, 0, 2)).thenReturn(responsePage0);
+        when(apiCall.getAllActiveUsers(token, 1, 2)).thenReturn(responsePage1);
+
         ArrayList<User> users = jsonReader.getAllActiveUsers(token);
- 
-        assertNotNull(users);
-        assertEquals(6, users.size());
+
+        assertEquals(3, users.size());
+
+        assertEquals("1", users.get(0).getUserId());
         assertEquals("user1@example.com", users.get(0).getEmail());
+
+        assertEquals("2", users.get(1).getUserId());
         assertEquals("user2@example.com", users.get(1).getEmail());
+
+        assertEquals("3", users.get(2).getUserId());
         assertEquals("user3@example.com", users.get(2).getEmail());
- 
-        verify(apiCall, times(2)).getAllActiveUsers(eq(token), anyInt(), anyInt());
     }
 
-   
+    @Test
+    void getStatusFromResponse_shouldReturnStatus_whenValidJson() {
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("status", 200L);
+
+        int status = jsonReader.getStatusFromResponse(jsonResponse);
+
+        assertEquals(200, status);
+    }
+    
+    @Test
+    void parseJsonResponse_shouldReturnNull_whenInputIsNullOrEmpty() throws Exception {
+        assertNull(jsonReader.parseJsonResponse(null));
+        assertNull(jsonReader.parseJsonResponse(""));
+    }
+
+    @Test
+    void parseJsonResponse_shouldReturnJson_whenValidString() throws Exception {
+        String jsonStr = "{\"message\":\"Success\"}";
+
+        JSONObject result = jsonReader.parseJsonResponse(jsonStr);
+
+        assertEquals("Success", result.get("message"));
+    }
+
 
 }
