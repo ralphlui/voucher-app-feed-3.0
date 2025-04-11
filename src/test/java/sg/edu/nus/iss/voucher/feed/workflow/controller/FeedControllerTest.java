@@ -123,7 +123,7 @@ public class FeedControllerTest {
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.data").isArray())
 				.andExpect(jsonPath("$.data.length()").value(mockFeeds.size()))
-				.andExpect(jsonPath("$.message").value("Successfully get all feeds by Users"))
+				.andExpect(jsonPath("$.message").value("Successfully retrieved all feeds by user."))
 				.andExpect(jsonPath("$.totalRecord").value(10)).andDo(print());
 
 		resultMap = new HashMap<>();
@@ -143,7 +143,7 @@ public class FeedControllerTest {
 				.param("page", String.valueOf(page)).param("size", String.valueOf(size))
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message").value("Bad Request:User could not be blank.")).andDo(print());
+				.andExpect(jsonPath("$.message").value("Bad Request: UserId cannot be blank.")).andDo(print());
 
 		apiRequest.setUserId("123");
 		auditDTO = new AuditDTO();
@@ -185,7 +185,7 @@ public class FeedControllerTest {
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.success").value("true"))
 				.andExpect(jsonPath("$.data.feedId").value(feedId))
-				.andExpect(jsonPath("$.message").value("Feed get successfully.")).andDo(print());
+				.andExpect(jsonPath("$.message").value("Feed retrieved successfully.")).andDo(print());
 
 		feedDTO = new FeedDTO();
 		when(feedService.findByFeedId(feedId)).thenReturn(feedDTO);
@@ -201,7 +201,7 @@ public class FeedControllerTest {
 		mockMvc.perform(MockMvcRequestBuilders.post("/api/feeds/Id").header("Authorization", authorizationHeader)
 				.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value("false"))
-				.andExpect(jsonPath("$.message").value("Bad Request:FeedId could not be blank.")).andDo(print());
+				.andExpect(jsonPath("$.message").value("Bad Request: FeedId cannot be blank.")).andDo(print());
 
 		apiRequest.setFeedId("123");
 		auditDTO = new AuditDTO();
@@ -262,7 +262,7 @@ public class FeedControllerTest {
 				MockMvcRequestBuilders.patch("/api/feeds/readStatus").header("Authorization", authorizationHeader)
 						.contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(apiRequest)))
 				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value("false"))
-				.andExpect(jsonPath("$.message").value("Bad Request:FeedId could not be blank."));
+				.andExpect(jsonPath("$.message").value("Bad Request: FeedId could not be blank."));
 		
 		
 		apiRequest.setFeedId("123");

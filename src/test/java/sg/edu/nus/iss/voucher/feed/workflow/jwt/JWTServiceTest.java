@@ -3,6 +3,7 @@ package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.security.PublicKey;
 import java.util.Date;
 
 import io.jsonwebtoken.Claims;
@@ -42,7 +43,6 @@ class JWTServiceTest {
     public void testValidateToken_validToken_shouldReturnTrue() throws Exception {
         String email = "test@example.com";
         Claims claims = mock(Claims.class);
-
         when(claims.get("userEmail", String.class)).thenReturn(email);
         when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 10000)); // not expired
 
@@ -64,12 +64,12 @@ class JWTServiceTest {
         assertTrue(spy.isTokenExpired("auth-token"));
     }
 
-    
-    
     @Test
     public void testGetUserDetail_shouldReturnCorrectUserDetails() throws Exception {
+     
         String token = "auth-token";
         String userId = "123";
+
         sg.edu.nus.iss.voucher.feed.workflow.pojo.User user = new sg.edu.nus.iss.voucher.feed.workflow.pojo.User();
         user.setEmail("test@example.com");
         user.setPassword("password123");
@@ -77,17 +77,17 @@ class JWTServiceTest {
 
         JWTService spy = spy(jwtService);
         doReturn(userId).when(spy).extractUserID(token);
+
         when(jsonReader.getActiveUserDetails(userId, token)).thenReturn(user);
 
-        UserDetails details = User.withUsername("test@example.com")
-                                   .password("password123")
-                                   .roles("USER")
-                                   .build();
+        UserDetails userDetails = spy.getUserDetail(token);
 
-        assertTrue(details.getAuthorities().stream()
-                    .anyMatch(granted -> granted.getAuthority().equals("ROLE_USER")));
+        assertNotNull(userDetails);
+        assertEquals("test@example.com", userDetails.getUsername());
+        assertEquals("password123", userDetails.getPassword());
+        assertTrue(userDetails.getAuthorities().stream()
+            .anyMatch(granted -> granted.getAuthority().equals("ROLE_MERCHANT")));
     }
-
 
     @Test
     public void testRetrieveUserName_shouldReturnUserName() throws Exception {
@@ -118,4 +118,21 @@ class JWTServiceTest {
         String userId = spy.getUserIdByAuthHeader(token);
         assertEquals("user-id-123", userId);
     }
+   
+
+    @Test
+    public void testExtractAllClaims_shouldReturnClaims() throws Exception {
+
+        String token = "auth-token";
+        Claims mockClaims = mock(Claims.class);
+
+        JWTService spy = spy(jwtService);
+        doReturn(mockClaims).when(spy).extractAllClaims(token);
+
+        Claims claims = spy.extractAllClaims(token);
+
+        assertNotNull(claims);
+    }
+    
+ 
 }

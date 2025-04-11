@@ -48,166 +48,154 @@ public class FeedController {
 
 	@PostMapping(value = "/users", produces = "application/json")
 	public ResponseEntity<APIResponse<List<FeedDTO>>> getByUserId(
-			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody FeedRequest apiRequest, @RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "50") int size) {
+	        @RequestHeader(value = "Authorization", required = true) String authorizationHeader,
+	        @RequestBody FeedRequest apiRequest,
+	        @RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "50") int size) {
 
-		logger.info("Call feeds by UserId feed API...");
+	    logger.info("Call feeds by UserId feed API...");
 
-		String message = "";
-		String activityType = "Feed List by User";
-		String endpoint = "/api/feeds/users/";
-		HTTPVerb httpMethod = HTTPVerb.POST;
+	    String message = "";
+	    String activityType = "Feed List by User";
+	    String endpoint = "/api/feeds/users/";
+	    HTTPVerb httpMethod = HTTPVerb.POST;
 
-		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
-				httpMethod);
+	    AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint, httpMethod);
 
-		try {
+	    try {
+	        String userId = GeneralUtility.makeNotNull(apiRequest.getUserId()).trim();
+	        if (!userId.isEmpty()) {
 
-			String userId = GeneralUtility.makeNotNull(apiRequest.getUserId()).trim();
-			if (!userId.equals("")) {
+	            Map<Long, List<FeedDTO>> resultMap = feedService.getFeedsByUserWithPagination(userId, page, size);
+	            List<FeedDTO> feedDTOList = new ArrayList<>();
+	            long totalRecord = 0;
 
-				Map<Long, List<FeedDTO>> resultMap = feedService.getFeedsByUserWithPagination(userId, page, size);
-				List<FeedDTO> feedDTOList = new ArrayList<FeedDTO>();
-				long totalRecord = 0;
-				if (resultMap.size() == 0) {
-					String mesasge = "Feeds not found.";
-					logger.error(mesasge);
-					auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	            if (resultMap.isEmpty()) {
+	                message = "Feeds not found.";
+	                logger.warn(message);
+	                auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	                return ResponseEntity.ok(APIResponse.success(feedDTOList, message, totalRecord));
+	            }
 
-					return ResponseEntity.status(HttpStatus.OK)
-							.body(APIResponse.success(feedDTOList, mesasge, totalRecord));
-				}
-				for (Map.Entry<Long, List<FeedDTO>> entry : resultMap.entrySet()) {
-					totalRecord = entry.getKey();
-					feedDTOList = entry.getValue();
-					logger.info("totalRecord: " + totalRecord);
-					logger.info("FeedDTO List: " + feedDTOList);
-				}
+	            for (Map.Entry<Long, List<FeedDTO>> entry : resultMap.entrySet()) {
+	                totalRecord = entry.getKey();
+	                feedDTOList = entry.getValue();
+	                logger.info("totalRecord: {}", totalRecord);
+	                logger.info("FeedDTO List: {}", feedDTOList);
+	            }
 
-				message = "Successfully get all feeds by Users";
-				auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	            message = "Successfully retrieved all feeds by user.";
+	            auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	            return ResponseEntity.ok(APIResponse.success(feedDTOList, message, totalRecord));
+	        } else {
+	            message = "Bad Request: UserId cannot be blank.";
+	            logger.error(message);
+	            auditService.logAudit(auditDTO, 400, message, authorizationHeader);
+	            return ResponseEntity.badRequest().body(APIResponse.error(message));
+	        }
 
-				return ResponseEntity.status(HttpStatus.OK)
-						.body(APIResponse.success(feedDTOList, message, totalRecord));
-			} else {
-				message = "Bad Request:User could not be blank.";
-				logger.error(message);
-				auditService.logAudit(auditDTO, 400, message, authorizationHeader);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
-			}
-
-		} catch (Exception e) {
-
-			e.printStackTrace();
-			message = UNEXPECTED_ERROR;
-
-			logger.error(message);
-			auditDTO.setRemarks(e.toString());
-			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-		}
+	    } catch (Exception e) {
+	        message = UNEXPECTED_ERROR;
+	        logger.error("{} {}", message, e.getMessage()); // no stack trace in console
+	        auditDTO.setRemarks(e.getMessage());
+	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+	    }
 	}
 
 	@PostMapping(value = "/Id", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> getFeedById(
-			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody FeedRequest apiRequest) {
-		logger.info("Calling getById Feed API...");
-		String message = "";
-		String activityType = "Find Feed by Id";
-		String endpoint = "/api/feeds/";
-		HTTPVerb httpMethod = HTTPVerb.POST;
+	        @RequestHeader(value = "Authorization", required = true) String authorizationHeader,
+	        @RequestBody FeedRequest apiRequest) {
 
-		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
-				httpMethod);
+	    logger.info("Calling getById Feed API...");
+	    String message = "";
+	    String activityType = "Find Feed by Id";
+	    String endpoint = "/api/feeds/";
+	    HTTPVerb httpMethod = HTTPVerb.POST;
 
-		try {
+	    AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint, httpMethod);
 
-			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
-			logger.info("feedId: " + feedId);
-			if (!GeneralUtility.makeNotNull(feedId).equals("")) {
-				FeedDTO feedDTO = feedService.findByFeedId(feedId);
-				if (feedDTO != null && GeneralUtility.makeNotNull(feedDTO.getFeedId()).equals(feedId)) {
-					message = "Feed get successfully.";
-					auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	    try {
+	        String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
+	        logger.info("feedId: {}", feedId);
 
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(feedDTO, message));
+	        if (!feedId.isEmpty()) {
+	            FeedDTO feedDTO = feedService.findByFeedId(feedId);
 
-				} else {
-					message = "Feed not found for Id: " + feedId;
-					auditService.logAudit(auditDTO, 404, message, authorizationHeader);
-					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-				}
+	            if (feedDTO != null && feedId.equals(GeneralUtility.makeNotNull(feedDTO.getFeedId()))) {
+	                message = "Feed retrieved successfully.";
+	                auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	                return ResponseEntity.ok(APIResponse.success(feedDTO, message));
+	            } else {
+	                message = "Feed not found for Id: " + feedId;
+	                auditService.logAudit(auditDTO, 404, message, authorizationHeader);
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+	            }
 
-			} else {
-				message = "Bad Request:FeedId could not be blank.";
-				logger.error(message);
-				auditService.logAudit(auditDTO, 400, message, authorizationHeader);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
-			}
+	        } else {
+	            message = "Bad Request: FeedId cannot be blank.";
+	            logger.error(message);
+	            auditService.logAudit(auditDTO, 400, message, authorizationHeader);
+	            return ResponseEntity.badRequest().body(APIResponse.error(message));
+	        }
 
-		} catch (Exception e) {
-
-			e.printStackTrace();
-			message =UNEXPECTED_ERROR;
-
-			logger.error(message + e.toString());
-			auditDTO.setRemarks(e.toString());
-			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-		}
+	    } catch (Exception e) {
+	        message = UNEXPECTED_ERROR;
+	        logger.error("{} {}", message, e.getMessage()); // Structured logging
+	        auditDTO.setRemarks(e.getMessage());
+	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+	    }
 	}
 
+	
 	@PatchMapping(value = "/readStatus", produces = "application/json")
 	public ResponseEntity<APIResponse<FeedDTO>> patchFeedReadStatus(
-			@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-			@RequestBody FeedRequest apiRequest) {
+	        @RequestHeader(value = "Authorization", required = true) String authorizationHeader,
+	        @RequestBody FeedRequest apiRequest) {
 
-		logger.info("Calling updateReadStatusById Feed API...");
-		String message = "";
-		String activityType = "Update Feed Status";
-		String endpoint = "/api/feeds/readStatus";
-		HTTPVerb httpMethod = HTTPVerb.PATCH;
+	    logger.info("Calling updateReadStatusById Feed API...");
+	    String message = "";
+	    String activityType = "Update Feed Status";
+	    String endpoint = "/api/feeds/readStatus";
+	    HTTPVerb httpMethod = HTTPVerb.PATCH;
 
-		AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint,
-				httpMethod);
+	    AuditDTO auditDTO = auditService.createAuditDTO(INVALID_USER_ID, activityType, activityTypePrefix, endpoint, httpMethod);
 
-		try {
+	    try {
+	        String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
+	        logger.info("feedId: {}", feedId);
 
-			String feedId = GeneralUtility.makeNotNull(apiRequest.getFeedId()).trim();
-			logger.info("feedId: " + feedId);
+	        if (!feedId.isEmpty()) {
+	            FeedDTO feedDTO = feedService.updateReadStatusById(feedId);
 
-			if (!GeneralUtility.makeNotNull(feedId).equals("")) {
-				FeedDTO feedDTO = feedService.updateReadStatusById(feedId);
+	            if (feedId.equals(GeneralUtility.makeNotNull(feedDTO.getFeedId()))) {
+	                message = "Read status updated successfully for Id: " + feedId;
+	                auditService.logAudit(auditDTO, 200, message, authorizationHeader);
+	                return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(feedDTO, message));
+	            } else {
+	                message = "Feed not found for Id: " + feedId;
+	                auditService.logAudit(auditDTO, 404, message, authorizationHeader);
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
+	            }
+	        } else {
+	            message = "Bad Request: FeedId could not be blank.";
+	            auditService.logAudit(auditDTO, 400, message, authorizationHeader);
+	            logger.error(message);
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
+	        }
 
-				if (GeneralUtility.makeNotNull(feedDTO.getFeedId()).equals(feedId)) {
-					message = "Read status updated successfully for Id: " + feedId;
-					auditService.logAudit(auditDTO, 200, message, authorizationHeader);
-					return ResponseEntity.status(HttpStatus.OK).body(APIResponse.success(feedDTO, message));
-				} else {
-					message = "Feed not found for Id: " + feedId;
-					auditService.logAudit(auditDTO, 404, message, authorizationHeader);
-					return ResponseEntity.status(HttpStatus.NOT_FOUND).body(APIResponse.error(message));
-				}
-			} else {
-				message = "Bad Request:FeedId could not be blank.";
-				auditService.logAudit(auditDTO, 400, message, authorizationHeader);
-				logger.error(message);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(APIResponse.error(message));
-			}
+	    } catch (Exception e) {
+	        message = UNEXPECTED_ERROR;
 
-		} catch (Exception e) {
+	        logger.error("{} {}", message, e.getMessage()); 
+	        auditDTO.setRemarks(e.getMessage()); 
+	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
 
-			e.printStackTrace();
-			message = UNEXPECTED_ERROR;
-
-			logger.error(message + e.toString());
-			auditDTO.setRemarks(e.toString());
-			auditService.logAudit(auditDTO, 500, message, authorizationHeader);
-
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
-		}
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
+	    }
 	}
+
 
 }
