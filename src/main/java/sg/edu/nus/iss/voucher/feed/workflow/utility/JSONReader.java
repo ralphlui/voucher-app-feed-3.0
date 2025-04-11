@@ -30,6 +30,8 @@ public class JSONReader {
 	
 	private static final String EMAIL_KEY = "email";
 	private static final String USERNAME_KEY = "username";
+	private static final String USER_LOG_PREFIX = "User: ";
+
 
 
 	public MessagePayload readFeedMessage(String message) {
@@ -64,7 +66,7 @@ public class JSONReader {
 
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error("Read Feed Message exception... {}", ex.toString());
 		}
 		return feedMsg;
@@ -89,7 +91,7 @@ public class JSONReader {
 				JSONArray data = (JSONArray) jsonResponse.get("data");
 				for (Object obj : data) {
 					JSONObject user = (JSONObject) obj;
-					logger.info("User: " + user.toJSONString());
+					logger.info(USER_LOG_PREFIX + user.toJSONString());
 
 					String userId = GeneralUtility.makeNotNull(user.get("userID").toString());
 					String email = GeneralUtility.makeNotNull(user.get(EMAIL_KEY).toString());
@@ -106,7 +108,7 @@ public class JSONReader {
 
 				page++;
 			} catch (ParseException e) {
-				e.printStackTrace();
+			
 				logger.error("Error parsing JSON response for getUsersByPreferences... {}", e.toString());
 				break;
 			}
@@ -125,12 +127,12 @@ public class JSONReader {
 			JSONParser parser = new JSONParser();
 			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
 			JSONObject data = (JSONObject) jsonResponse.get("data");
-			logger.info("User: " + data.toJSONString());
+			logger.info(USER_LOG_PREFIX + data.toJSONString());
 
 			userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+			
 			logger.error("Error parsing JSON response for getActiveUser... {}", e.toString());
 
 		}
@@ -171,7 +173,7 @@ public class JSONReader {
 			JSONParser parser = new JSONParser();
 			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
 			JSONObject data = (JSONObject) jsonResponse.get("data");
-			logger.info("User: " + data.toJSONString());
+			logger.info(USER_LOG_PREFIX + data.toJSONString());
 			if (data != null) {
 				String userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
 				String email = GeneralUtility.makeNotNull(data.get(EMAIL_KEY).toString());
@@ -183,7 +185,7 @@ public class JSONReader {
 			}
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+			
 			logger.error("Error parsing JSON response for getActiveUserDetails... {}", e.toString());
 
 		}
@@ -206,7 +208,7 @@ public class JSONReader {
 			token = GeneralUtility.makeNotNull(data.get("token").toString());
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+		
 			logger.error("Error parsing JSON response for getAccessToken... {}", e.toString());
 
 		}

@@ -8,15 +8,21 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
+
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 import java.util.ArrayList;
 
+@ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
 class JSONReaderTest {
 
     @Mock
@@ -48,6 +54,19 @@ class JSONReaderTest {
         assertEquals(expected.getCampaignDescription(), result.getCampaignDescription());
         assertEquals(expected.getStoreId(), result.getStoreId());
         assertEquals(expected.getStoreName(), result.getStoreName());
+    }
+
+    @Test
+    void readFeedMessage_shouldReturnEmptyMessagePayload_whenParseExceptionOccurs() {
+        String invalidMessage = "{\"email\": \"test@example.com\", \"campaign\": { \"campaignId\": 123 }}"; // Invalid format
+
+        MessagePayload result = jsonReader.readFeedMessage(invalidMessage);
+
+        // Expect empty or default fields in the result
+        assertNull(result.getEmail());
+        assertNull(result.getCampaignId());
+        assertNull(result.getStoreId());
+        assertNull(result.getStoreName());
     }
 
   
@@ -177,6 +196,30 @@ class JSONReaderTest {
 
         assertEquals("Success", result.get("message"));
     }
+
+    @Test
+    void parseJsonResponse_ThrowParseException_whenInvalidJson() throws Exception {
+        String invalidJson = "{ message: \"Success\" "; // Missing closing curly brace
+
+        assertThrows(ParseException.class, () -> {
+            jsonReader.parseJsonResponse(invalidJson);
+        });
+    }
+
+    @Test
+    void getAllActiveUsers_ReturnEmptyList_whenNoUsersFound() throws Exception {
+        jsonReader.pageMaxSize = "2";
+        String token = "valid_token";
+
+        String emptyResponse = "{\"totalRecord\": 0, \"data\": []}";
+
+        when(apiCall.getAllActiveUsers(token, 0, 2)).thenReturn(emptyResponse);
+
+        ArrayList<User> users = jsonReader.getAllActiveUsers(token);
+
+        assertTrue(users.isEmpty());
+    }
+    
 
 
 }
