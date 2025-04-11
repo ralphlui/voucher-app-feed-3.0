@@ -2,33 +2,27 @@ package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
- 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
-import java.util.Base64;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
- 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+
+import io.jsonwebtoken.Claims;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationContext; 
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.User;
+
 import sg.edu.nus.iss.voucher.feed.workflow.configuration.JWTConfig;
 import sg.edu.nus.iss.voucher.feed.workflow.utility.JSONReader;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ActiveProfiles("test")
 class JWTServiceTest {
-
-    @InjectMocks
-    private JWTService jwtService;
 
     @Mock
     private JWTConfig jwtConfig;
@@ -36,39 +30,92 @@ class JWTServiceTest {
     @Mock
     private JSONReader jsonReader;
 
-    @Mock
-    private ApplicationContext context;
-
-    private PublicKey publicKey;
-    private String testToken;
+    @InjectMocks
+    private JWTService jwtService;
 
     @BeforeEach
-    void setUp() throws Exception {
-        
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.generateKeyPair();
-        publicKey = keyPair.getPublic();
- 
-        when(jwtConfig.getJWTPubliceKey()).thenReturn(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
- 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", "testUserID");
-        claims.put("userEmail", "test@example.com");
-        claims.put("userName", "Test User");
-
-        testToken = Jwts.builder()
-                .claims(claims)
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // Expires in 1 hour
-                .signWith(Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256)) // Temporary key
-                .compact();
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testLoadPublicKey() throws Exception {
-        PublicKey loadedKey = jwtService.loadPublicKey();
-        assertNotNull(loadedKey);
-        assertArrayEquals(publicKey.getEncoded(), loadedKey.getEncoded());
+    public void testValidateToken_validToken_shouldReturnTrue() throws Exception {
+        String email = "test@example.com";
+        Claims claims = mock(Claims.class);
+
+        when(claims.get("userEmail", String.class)).thenReturn(email);
+        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() + 10000)); // not expired
+
+        JWTService spy = spy(jwtService);
+        doReturn(claims).when(spy).extractAllClaims(any());
+
+        UserDetails userDetails = User.withUsername(email).password("password").roles("USER").build();
+        assertTrue(spy.validateToken("auth-token", userDetails));
     }
 
+    @Test
+    public void testIsTokenExpired_expiredToken_shouldReturnTrue() throws Exception {
+        Claims claims = mock(Claims.class);
+        when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() - 10000)); // expired
+
+        JWTService spy = spy(jwtService);
+        doReturn(claims).when(spy).extractAllClaims(any());
+
+        assertTrue(spy.isTokenExpired("auth-token"));
+    }
+
+    
+    
+    @Test
+    public void testGetUserDetail_shouldReturnCorrectUserDetails() throws Exception {
+        String token = "auth-token";
+        String userId = "123";
+        sg.edu.nus.iss.voucher.feed.workflow.pojo.User user = new sg.edu.nus.iss.voucher.feed.workflow.pojo.User();
+        user.setEmail("test@example.com");
+        user.setPassword("password123");
+        user.setRole("MERCHANT");
+
+        JWTService spy = spy(jwtService);
+        doReturn(userId).when(spy).extractUserID(token);
+        when(jsonReader.getActiveUserDetails(userId, token)).thenReturn(user);
+
+        UserDetails details = User.withUsername("test@example.com")
+                                   .password("password123")
+                                   .roles("USER")
+                                   .build();
+
+        assertTrue(details.getAuthorities().stream()
+                    .anyMatch(granted -> granted.getAuthority().equals("ROLE_USER")));
+    }
+
+
+    @Test
+    public void testRetrieveUserName_shouldReturnUserName() throws Exception {
+        Claims claims = mock(Claims.class);
+        when(claims.get("userName", String.class)).thenReturn("JohnDoe");
+
+        JWTService spy = spy(jwtService);
+        doReturn(claims).when(spy).extractAllClaims(any());
+
+        String username = spy.retrieveUserName("dummy-token");
+        assertEquals("JohnDoe", username);
+    }
+
+    @Test
+    public void testHashWithSHA256_shouldReturnValidHash() {
+    	String token = "auth-token";
+        String hashed = jwtService.hashWithSHA256(token);
+        assertNotNull(hashed);
+        assertTrue(hashed.length() > 0);
+    }
+
+    @Test
+    public void testGetUserIdByAuthHeader_shouldReturnCorrectUserId() throws Exception {
+        String token = "Bearer auth-token";
+        JWTService spy = spy(jwtService);
+        doReturn("user-id-123").when(spy).extractUserID("auth-token");
+
+        String userId = spy.getUserIdByAuthHeader(token);
+        assertEquals("user-id-123", userId);
+    }
 }

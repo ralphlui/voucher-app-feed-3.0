@@ -1,10 +1,11 @@
 package sg.edu.nus.iss.voucher.feed.workflow.service.impl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 import sg.edu.nus.iss.voucher.feed.workflow.dao.FeedDAO;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
@@ -17,18 +18,15 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class FeedServiceTest {
+@ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
+class FeedServiceTest {
 
     @Mock
     private FeedDAO feedDao;
 
     @InjectMocks
     private FeedService feedService;
-
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     public void testGetFeedsByUserWithPagination_ValidUser() {
