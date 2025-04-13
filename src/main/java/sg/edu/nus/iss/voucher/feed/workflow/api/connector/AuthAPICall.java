@@ -1,9 +1,7 @@
 package sg.edu.nus.iss.voucher.feed.workflow.api.connector;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -30,22 +28,21 @@ public class AuthAPICall {
 	private static final Logger logger = LoggerFactory.getLogger(AuthAPICall.class);
 	private static final String GET_SPECIFIC_ACTIVE_USERS_EXCEPTION_MSG = "getSpecificActiveUsers exception... {}";
 
-	
+	private  RequestConfig config = RequestConfig.custom()
+            .setConnectTimeout(30000)
+            .setConnectionRequestTimeout(30000)
+            .setSocketTimeout(30000)
+            .build();
 	
 	public String getActiveUser(String userId,String authorizationHeader ) {
 	    String responseStr = "";
 	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+	            .setDefaultRequestConfig(config)
+	            .build()) {
 	    	String url = authURL.trim() + "/active";
 	        logger.info("getSpeicficActiveUsers url : " + url);
 	       
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	        HttpPost request = new HttpPost(url);
 	        request.setHeader("Authorization", authorizationHeader);
 	        request.setHeader("Content-Type", "application/json");
@@ -81,12 +78,6 @@ public class AuthAPICall {
 	public String getAllActiveUsers(String authorizationHeader,int page, int size) {
 	    String responseStr = "";
 	   
-	    
-	    RequestConfig config = RequestConfig.custom()
-	            .setConnectTimeout(30000)
-	            .setConnectionRequestTimeout(30000)
-	            .setSocketTimeout(30000)
-	            .build();
 
 	    try (CloseableHttpClient httpClient = HttpClientBuilder.create()
 	            .setDefaultRequestConfig(config)
