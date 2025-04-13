@@ -1,9 +1,7 @@
 package sg.edu.nus.iss.voucher.feed.workflow.api.connector;
 
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,7 +11,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,22 +29,23 @@ public class AuthAPICall {
 
 	
 	private static final String UTF_8 = "UTF-8";
+	
+	RequestConfig config = RequestConfig.custom()
+            .setConnectTimeout(30000)
+            .setConnectionRequestTimeout(30000)
+            .setSocketTimeout(30000)
+            .build();
 
 	
 	public String getActiveUser(String userId,String authorizationHeader ) {
 	    String responseStr = "";
 	    
-	    CloseableHttpClient httpClient = HttpClients.createDefault();
-	    try {
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+	            .setDefaultRequestConfig(config)
+	            .build()) {
 	    	String url = authURL.trim() + "/active";
 	        logger.info("getSpeicficActiveUsers url : " + url);
 	       
-	        RequestConfig config = RequestConfig.custom()
-	                .setConnectTimeout(30000)
-	                .setConnectionRequestTimeout(30000)
-	                .setSocketTimeout(30000)
-	                .build();
-	        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 	        HttpPost request = new HttpPost(url);
 	        request.setHeader("Authorization", authorizationHeader);
 	        request.setHeader("Content-Type", "application/json");
@@ -86,11 +84,6 @@ public class AuthAPICall {
 	    String url = authURL.trim() + "?page=" + page + "&size=" + size;
 	    logger.info("getAllActiveUsers url : {}", url);
 
-	    RequestConfig config = RequestConfig.custom()
-	            .setConnectTimeout(30000)
-	            .setConnectionRequestTimeout(30000)
-	            .setSocketTimeout(30000)
-	            .build();
 
 	    String responseStr = "";
 
@@ -121,11 +114,6 @@ public class AuthAPICall {
 	    String url = authURL.trim() + "/accessToken";
 	    logger.info("getAccessToken url: {}", url);
 
-	    RequestConfig config = RequestConfig.custom()
-	            .setConnectTimeout(30000)
-	            .setConnectionRequestTimeout(30000)
-	            .setSocketTimeout(30000)
-	            .build();
 
 	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build()) {
 	        HttpPost request = new HttpPost(url);
