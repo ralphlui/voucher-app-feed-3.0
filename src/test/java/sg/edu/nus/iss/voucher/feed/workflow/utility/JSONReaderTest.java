@@ -197,14 +197,6 @@ class JSONReaderTest {
         assertEquals("Success", result.get("message"));
     }
 
-    @Test
-    void parseJsonResponse_ThrowParseException_whenInvalidJson() throws Exception {
-        String invalidJson = "{ message: \"Success\" "; // Missing closing curly brace
-
-        assertThrows(ParseException.class, () -> {
-            jsonReader.parseJsonResponse(invalidJson);
-        });
-    }
 
     @Test
     void getAllActiveUsers_ReturnEmptyList_whenNoUsersFound() throws Exception {

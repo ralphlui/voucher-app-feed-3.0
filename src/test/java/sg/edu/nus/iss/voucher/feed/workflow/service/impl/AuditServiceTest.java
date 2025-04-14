@@ -1,6 +1,8 @@
 package sg.edu.nus.iss.voucher.feed.workflow.service.impl;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.*;
 
 import java.util.UUID;
@@ -59,7 +61,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void testCreateAuditDTO_setsAllFields() {
+    void testCreateAuditDTO() {
         String userId = UUID.randomUUID().toString();
         String activityType = "CREATE";
         String prefix = "AUDIT_";
@@ -68,6 +70,9 @@ class AuditServiceTest {
 
         AuditDTO dto = auditService.createAuditDTO(userId, activityType, prefix, endpoint, verb);
 
+        assertNotNull(dto);
+        assertEquals(userId, dto.getUserId());
+       
     }
 
     @Test
