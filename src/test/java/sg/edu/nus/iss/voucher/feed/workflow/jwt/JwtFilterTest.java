@@ -1,5 +1,6 @@
 package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import sg.edu.nus.iss.voucher.feed.workflow.service.impl.AuditService; 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -47,6 +49,7 @@ class JwtFilterTest {
         jwtFilter.activityTypePrefix = "FEED";
     }
 
+    
     @Test
     void testMissingAuthorizationHeader() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -54,9 +57,11 @@ class JwtFilterTest {
 
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        assert(response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus(), 
+            "Expected status 401 Unauthorized when Authorization header is missing");
     }
 
+    
     @Test
     void testInvalidAuthorizationHeader() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -65,8 +70,10 @@ class JwtFilterTest {
 
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        assert(response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus(),
+            "Expected status 401 Unauthorized for invalid Authorization header");
     }
+
 
     @Test
     void testValidToken() throws Exception {
@@ -82,13 +89,14 @@ class JwtFilterTest {
         jwtFilter.doFilterInternal(request, response, filterChain);
 
         verify(filterChain, times(1)).doFilter(request, response);
-        assert(response.getStatus() == 200); // default for successful response
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus(), 
+            "Expected 200 OK for valid token");
     }
-
+    
+    
     @Test
     void testExpiredToken() throws Exception {
         String token = "expired.jwt.token";
-
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + token);
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -97,13 +105,14 @@ class JwtFilterTest {
 
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        assert(response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus(),
+            "Expected 401 Unauthorized for expired token");
     }
 
+    
     @Test
     void testInvalidToken() throws Exception {
         String token = "invalid.jwt.token";
-
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + token);
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -112,7 +121,8 @@ class JwtFilterTest {
 
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        assert(response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED);
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus(),
+            "Expected 401 Unauthorized for malformed token");
     }
 
 }

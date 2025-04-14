@@ -31,7 +31,7 @@ import sg.edu.nus.iss.voucher.feed.workflow.utility.*;
 public class FeedController {
 	private static final Logger logger = LoggerFactory.getLogger(FeedController.class);
 	private static final String UNEXPECTED_ERROR = "An unexpected error occurred. Please contact support.";
-
+	private static final String LOG_MESSAGE_FORMAT = "{} {}";
 
 	@Autowired
 	private FeedService feedService;
@@ -96,7 +96,7 @@ public class FeedController {
 
 	    } catch (Exception e) {
 	        message = UNEXPECTED_ERROR;
-	        logger.error("{} {}", message, e.getMessage()); // no stack trace in console
+	        logger.error(LOG_MESSAGE_FORMAT, message, e.getMessage());
 	        auditDTO.setRemarks(e.getMessage());
 	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
@@ -142,7 +142,7 @@ public class FeedController {
 
 	    } catch (Exception e) {
 	        message = UNEXPECTED_ERROR;
-	        logger.error("{} {}", message, e.getMessage()); // Structured logging
+	        logger.error(LOG_MESSAGE_FORMAT, message, e.getMessage());
 	        auditDTO.setRemarks(e.getMessage());
 	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(APIResponse.error(message));
@@ -189,7 +189,7 @@ public class FeedController {
 	    } catch (Exception e) {
 	        message = UNEXPECTED_ERROR;
 
-	        logger.error("{} {}", message, e.getMessage()); 
+	        logger.error(LOG_MESSAGE_FORMAT, message, e.getMessage());
 	        auditDTO.setRemarks(e.getMessage()); 
 	        auditService.logAudit(auditDTO, 500, message, authorizationHeader);
 
