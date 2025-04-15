@@ -21,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -50,19 +51,19 @@ public class FeedControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	@MockBean
+	@MockitoBean
 	private FeedService feedService;
 
-	@MockBean
+	@MockitoBean
 	private AuthAPICall authAPICall;
 
-	@MockBean
+	@MockitoBean
 	private AuditService auditService;
 
-	@MockBean
+	@MockitoBean
 	private JWTService jwtService;
 
-	@MockBean
+	@MockitoBean
 	private JSONReader jsonReader;
 
 	@Value("${audit.activity.type.prefix}")
