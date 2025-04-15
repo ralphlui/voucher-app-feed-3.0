@@ -3,8 +3,6 @@ package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 import java.util.Date;
 import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +22,13 @@ import java.util.Base64;
 @Service
 public class JWTService {
 
-	@Autowired
-	private JWTConfig jwtConfig;
-	
-	@Autowired
-	ApplicationContext context;
-	
-	@Autowired
-	JSONReader jsonReader;
+	private final JWTConfig jwtConfig;
+	private final JSONReader jsonReader;
+
+	public JWTService(JWTConfig jwtConfig, JSONReader jsonReader) {
+		this.jwtConfig = jwtConfig;
+		this.jsonReader = jsonReader;
+	}
 
 	public PublicKey loadPublicKey() throws Exception {
 		byte[] keyBytes = Base64.getDecoder().decode(jwtConfig.getJWTPubliceKey());
@@ -53,13 +50,12 @@ public class JWTService {
 	public Claims extractAllClaims(String token) throws JwtException, IllegalArgumentException, Exception {
 		return Jwts.parser().verifyWith(loadPublicKey()).build().parseSignedClaims(token).getPayload();
 	}
-	
+
 	public UserDetails getUserDetail(String token) throws JwtException, IllegalArgumentException, Exception {
 		String userID = extractUserID(token);
-		User user = jsonReader.getActiveUserDetails(userID,token);
-		UserDetails userDetails = org.springframework.security.core.userdetails.User
-				.withUsername(user.getEmail()).password(user.getPassword()).roles(user.getRole().toString())
-				.build();
+		User user = jsonReader.getActiveUserDetails(userID, token);
+		UserDetails userDetails = org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+				.password(user.getPassword()).roles(user.getRole().toString()).build();
 		return userDetails;
 	}
 
@@ -77,28 +73,28 @@ public class JWTService {
 	public Date extractExpiration(String token) throws JwtException, IllegalArgumentException, Exception {
 		return extractClaim(token, Claims::getExpiration);
 	}
-	
-    public String hashWithSHA256(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashedBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hashedBytes);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing refresh token", e);
-        }
-    }
-    
-    public String getUserIdByAuthHeader(String authHeader) throws JwtException, IllegalArgumentException, Exception {
-    	String userID ="";
-    	String jwtToken = authHeader.substring(7);
-    	if(jwtToken != null) {
-    		 userID = extractUserID(jwtToken);
-    		
-    	}
+
+	public String hashWithSHA256(String token) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hashedBytes = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(hashedBytes);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("Error hashing refresh token", e);
+		}
+	}
+
+	public String getUserIdByAuthHeader(String authHeader) throws JwtException, IllegalArgumentException, Exception {
+		String userID = "";
+		String jwtToken = authHeader.substring(7);
+		if (jwtToken != null) {
+			userID = extractUserID(jwtToken);
+
+		}
 		return userID;
-    }
-    
-    public String retrieveUserName(String token) throws JwtException, IllegalArgumentException, Exception {
+	}
+
+	public String retrieveUserName(String token) throws JwtException, IllegalArgumentException, Exception {
 		try {
 			Claims claims = extractAllClaims(token);
 			String userName = claims.get("userName", String.class);
