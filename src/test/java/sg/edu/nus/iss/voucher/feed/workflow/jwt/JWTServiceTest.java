@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.User;
 
@@ -40,7 +41,7 @@ class JWTServiceTest {
     }
 
     @Test
-    public void testValidateToken_validToken_shouldReturnTrue() throws Exception {
+    public void testValidateToken_validToken_ReturnTrue() throws Exception {
         String email = "test@example.com";
         Claims claims = mock(Claims.class);
         when(claims.get("userEmail", String.class)).thenReturn(email);
@@ -54,7 +55,7 @@ class JWTServiceTest {
     }
 
     @Test
-    public void testIsTokenExpired_expiredToken_shouldReturnTrue() throws Exception {
+    public void testIsTokenExpired_expiredToken_ReturnTrue() throws Exception {
         Claims claims = mock(Claims.class);
         when(claims.getExpiration()).thenReturn(new Date(System.currentTimeMillis() - 10000)); // expired
 
@@ -65,8 +66,7 @@ class JWTServiceTest {
     }
 
     @Test
-    public void testGetUserDetail_shouldReturnCorrectUserDetails() throws Exception {
-     
+    public void testGetUserDetail() throws Exception {
         String token = "auth-token";
         String userId = "123";
 
@@ -76,8 +76,9 @@ class JWTServiceTest {
         user.setRole("MERCHANT");
 
         JWTService spy = spy(jwtService);
-        doReturn(userId).when(spy).extractUserID(token);
+        ReflectionTestUtils.setField(spy, "jsonReader", jsonReader);
 
+        doReturn(userId).when(spy).extractUserID(token);
         when(jsonReader.getActiveUserDetails(userId, token)).thenReturn(user);
 
         UserDetails userDetails = spy.getUserDetail(token);
@@ -89,20 +90,21 @@ class JWTServiceTest {
             .anyMatch(granted -> granted.getAuthority().equals("ROLE_MERCHANT")));
     }
 
+
     @Test
-    public void testRetrieveUserName_shouldReturnUserName() throws Exception {
+    public void testRetrieveUserName_ReturnUserName() throws Exception {
         Claims claims = mock(Claims.class);
-        when(claims.get("userName", String.class)).thenReturn("JohnDoe");
+        when(claims.get("userName", String.class)).thenReturn("Test");
 
         JWTService spy = spy(jwtService);
         doReturn(claims).when(spy).extractAllClaims(any());
 
         String username = spy.retrieveUserName("dummy-token");
-        assertEquals("JohnDoe", username);
+        assertEquals("Test", username);
     }
 
     @Test
-    public void testHashWithSHA256_shouldReturnValidHash() {
+    public void testHashWithSHA256_ReturnValidHash() {
     	String token = "auth-token";
         String hashed = jwtService.hashWithSHA256(token);
         assertNotNull(hashed);
@@ -110,7 +112,7 @@ class JWTServiceTest {
     }
 
     @Test
-    public void testGetUserIdByAuthHeader_shouldReturnCorrectUserId() throws Exception {
+    public void testGetUserIdByAuthHeader_ReturnCorrectUserId() throws Exception {
         String token = "Bearer auth-token";
         JWTService spy = spy(jwtService);
         doReturn("user-id-123").when(spy).extractUserID("auth-token");
@@ -121,7 +123,7 @@ class JWTServiceTest {
    
 
     @Test
-    public void testExtractAllClaims_shouldReturnClaims() throws Exception {
+    public void testExtractAllClaims_ReturnClaims() throws Exception {
 
         String token = "auth-token";
         Claims mockClaims = mock(Claims.class);

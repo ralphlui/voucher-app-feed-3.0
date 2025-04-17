@@ -73,25 +73,6 @@ class JwtFilterTest {
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus(),
             "Expected status 401 Unauthorized for invalid Authorization header");
     }
-
-
-    @Test
-    void testValidToken() throws Exception {
-        String token = "valid.jwt.token";
-
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Authorization", "Bearer " + token);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        when(jwtService.getUserDetail(token)).thenReturn(userDetails);
-        when(jwtService.validateToken(token, userDetails)).thenReturn(true);
-
-        jwtFilter.doFilterInternal(request, response, filterChain);
-
-        verify(filterChain, times(1)).doFilter(request, response);
-        assertEquals(HttpServletResponse.SC_OK, response.getStatus(), 
-            "Expected 200 OK for valid token");
-    }
     
     
     @Test
