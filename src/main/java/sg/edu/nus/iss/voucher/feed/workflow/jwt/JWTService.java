@@ -53,7 +53,6 @@ public class JWTService {
 
 	public UserDetails getUserDetail(String token) throws JwtException, IllegalArgumentException, Exception {
 		String userID = extractUserID(token);
-		System.out.println("Extracted userID:   "+ userID);
 		
 		User user = jsonReader.getActiveUserDetails(userID, token);
 		UserDetails userDetails = org.springframework.security.core.userdetails.User.withUsername(user.getEmail())

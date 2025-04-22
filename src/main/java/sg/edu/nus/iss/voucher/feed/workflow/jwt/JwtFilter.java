@@ -50,9 +50,9 @@ public class JwtFilter extends OncePerRequestFilter {
 			return;
 		}
 		
-		logger.info("authorizationHeader:   "+ authorizationHeader);
+		
 		String jwtToken = authorizationHeader.substring(7);
-		logger.info("JWT Token:   "+ jwtToken);
+		
 
 		try {
 			UserDetails userDetails = jwtService.getUserDetail(jwtToken);
