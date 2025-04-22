@@ -37,14 +37,14 @@ public class VoucherFeedSecurityConfig {
         return http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(frontEndUrl.trim()));
-            config.setAllowedMethods(List.of("POST", "PATCH"));
+            config.setAllowedMethods(List.of("POST", "PATCH", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
             config.applyPermitDefaultValues();
             return config;
         }))
         .headers(headers -> headers
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Origin", "*"))
-            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "POST,PATCH"))
+            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "POST, PATCH, OPTIONS"))
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Headers", "*"))
             .addHeaderWriter(new HstsHeaderWriter(31536000, false, true))
             .addHeaderWriter((request, response) -> response.addHeader("Cache-Control", "max-age=60, must-revalidate"))
