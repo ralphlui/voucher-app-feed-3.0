@@ -9,7 +9,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -50,7 +49,8 @@ public class VoucherFeedSecurityConfig {
             .addHeaderWriter(new HstsHeaderWriter(31536000, false, true))
             .addHeaderWriter((request, response) -> response.addHeader("Cache-Control", "max-age=60, must-revalidate"))
         )
-        .csrf(AbstractHttpConfigurer::disable)
+        // CSRF protection is disabled because JWT Bearer tokens are used for stateless authentication.
+        .csrf(csrf -> csrf.disable()) // NOSONAR - CSRF is not required for JWT-based stateless authentication
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(SECURED_URLS).authenticated()
