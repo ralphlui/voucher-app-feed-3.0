@@ -2,7 +2,6 @@ package sg.edu.nus.iss.voucher.feed.workflow.configuration;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,14 +38,14 @@ public class VoucherFeedSecurityConfig {
         return http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(frontEndUrl.trim()));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "OPTIONS"));
+            config.setAllowedMethods(List.of("POST", "PATCH"));
             config.setAllowedHeaders(List.of("*"));
             config.applyPermitDefaultValues();
             return config;
         }))
         .headers(headers -> headers
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Origin", "*"))
-            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS"))
+            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "POST,PATCH"))
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Headers", "*"))
             .addHeaderWriter(new HstsHeaderWriter(31536000, false, true))
             .addHeaderWriter((request, response) -> response.addHeader("Cache-Control", "max-age=60, must-revalidate"))
