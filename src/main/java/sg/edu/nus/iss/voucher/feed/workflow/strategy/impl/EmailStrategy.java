@@ -58,7 +58,7 @@ public class EmailStrategy implements IFeedStrategy {
 
 		} catch (Exception e) {
 			logger.error("Error occurred while sendFeedEmail {} ..." , e.toString());
-			e.printStackTrace();
+			
 		}
 		return false;
 	}
