@@ -15,15 +15,6 @@ public class APIResponse<T> {
 	private long totalRecord;
 	private T data;
 
-
-	public static <T> APIResponse<T> success(String message) {
-		return APIResponse.<T>builder().success(true).message(message).build();
-	}
-
-	public static <T> APIResponse<T> error(T data) {
-		return APIResponse.<T>builder().success(false).message("error").totalRecord(0).build();
-	}
-
 	public static <T> APIResponse<T> error(String message) {
 		return APIResponse.<T>builder().success(false).message(message).totalRecord(0).build();
 	}

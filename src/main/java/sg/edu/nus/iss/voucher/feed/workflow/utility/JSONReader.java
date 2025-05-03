@@ -1,7 +1,6 @@
 package sg.edu.nus.iss.voucher.feed.workflow.utility;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,9 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import sg.edu.nus.iss.voucher.feed.workflow.api.connector.AuthAPICall;
-import sg.edu.nus.iss.voucher.feed.workflow.entity.Feed;
+
 import sg.edu.nus.iss.voucher.feed.workflow.entity.MessagePayload;
-import sg.edu.nus.iss.voucher.feed.workflow.entity.TargetUser;
 import sg.edu.nus.iss.voucher.feed.workflow.pojo.User;
 
 @Component
@@ -29,6 +27,12 @@ public class JSONReader {
 	AuthAPICall apiCall;
 
 	private static final Logger logger = LoggerFactory.getLogger(JSONReader.class);
+	
+	private static final String EMAIL_KEY = "email";
+	private static final String USERNAME_KEY = "username";
+	private static final String USER_LOG_PREFIX = "User: ";
+
+
 
 	public MessagePayload readFeedMessage(String message) {
 		MessagePayload feedMsg = new MessagePayload();
@@ -37,7 +41,7 @@ public class JSONReader {
 			JSONObject messageObject = (JSONObject) new JSONParser().parse(message);
 			if (messageObject != null) {
 
-				String email = (String) messageObject.get("email");
+				String email = (String) messageObject.get(EMAIL_KEY);
 
 				JSONObject campaign = (JSONObject) messageObject.get("campaign");
 				String campaignId = (String) campaign.get("campaignId");
@@ -62,7 +66,7 @@ public class JSONReader {
 
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			
 			logger.error("Read Feed Message exception... {}", ex.toString());
 		}
 		return feedMsg;
@@ -87,11 +91,11 @@ public class JSONReader {
 				JSONArray data = (JSONArray) jsonResponse.get("data");
 				for (Object obj : data) {
 					JSONObject user = (JSONObject) obj;
-					logger.info("User: " + user.toJSONString());
+					logger.info(USER_LOG_PREFIX + user.toJSONString());
 
 					String userId = GeneralUtility.makeNotNull(user.get("userID").toString());
-					String email = GeneralUtility.makeNotNull(user.get("email").toString());
-					String username = GeneralUtility.makeNotNull(user.get("username").toString());
+					String email = GeneralUtility.makeNotNull(user.get(EMAIL_KEY).toString());
+					String username = GeneralUtility.makeNotNull(user.get(USERNAME_KEY).toString());
 
 					if (!email.isEmpty()) {
 						User var = new User();
@@ -104,7 +108,7 @@ public class JSONReader {
 
 				page++;
 			} catch (ParseException e) {
-				e.printStackTrace();
+			
 				logger.error("Error parsing JSON response for getUsersByPreferences... {}", e.toString());
 				break;
 			}
@@ -123,12 +127,12 @@ public class JSONReader {
 			JSONParser parser = new JSONParser();
 			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
 			JSONObject data = (JSONObject) jsonResponse.get("data");
-			logger.info("User: " + data.toJSONString());
+			logger.info(USER_LOG_PREFIX + data.toJSONString());
 
-			userName = GeneralUtility.makeNotNull(data.get("username").toString());
+			userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+			
 			logger.error("Error parsing JSON response for getActiveUser... {}", e.toString());
 
 		}
@@ -169,10 +173,10 @@ public class JSONReader {
 			JSONParser parser = new JSONParser();
 			JSONObject jsonResponse = (JSONObject) parser.parse(responseStr);
 			JSONObject data = (JSONObject) jsonResponse.get("data");
-			logger.info("User: " + data.toJSONString());
+			logger.info(USER_LOG_PREFIX + data.toJSONString());
 			if (data != null) {
-				String userName = GeneralUtility.makeNotNull(data.get("username").toString());
-				String email = GeneralUtility.makeNotNull(data.get("email").toString());
+				String userName = GeneralUtility.makeNotNull(data.get(USERNAME_KEY).toString());
+				String email = GeneralUtility.makeNotNull(data.get(EMAIL_KEY).toString());
 				String role = GeneralUtility.makeNotNull(data.get("role").toString());
 				var.setUserId(userId);
 				var.setEmail(email);
@@ -181,7 +185,7 @@ public class JSONReader {
 			}
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+			
 			logger.error("Error parsing JSON response for getActiveUserDetails... {}", e.toString());
 
 		}
@@ -204,7 +208,7 @@ public class JSONReader {
 			token = GeneralUtility.makeNotNull(data.get("token").toString());
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+		
 			logger.error("Error parsing JSON response for getAccessToken... {}", e.toString());
 
 		}

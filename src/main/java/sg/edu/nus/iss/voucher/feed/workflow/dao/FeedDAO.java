@@ -199,7 +199,7 @@ public class FeedDAO {
 			 addedFeed = findById(feedId);
 					 
 		}catch (Exception ex) {
-			ex.printStackTrace();
+			
 	        logger.error("Save Feed exception: {}", ex.getMessage(), ex);
 	    }
 		return addedFeed;

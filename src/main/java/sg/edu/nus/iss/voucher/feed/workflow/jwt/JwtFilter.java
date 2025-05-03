@@ -1,6 +1,5 @@
 package sg.edu.nus.iss.voucher.feed.workflow.jwt;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,11 +23,13 @@ import io.jsonwebtoken.*;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-	@Autowired
-	private JWTService jwtService;
+	private final JWTService jwtService;
+	private final AuditService auditLogService;
 
-	@Autowired
-	private AuditService auditLogService;
+	public JwtFilter(JWTService jwtService, AuditService auditLogService) {
+		this.jwtService = jwtService;
+		this.auditLogService = auditLogService;
+	}
 
 	@Value("${audit.activity.type.prefix}")
 	String activityTypePrefix;
@@ -36,52 +37,54 @@ public class JwtFilter extends OncePerRequestFilter {
 	private String userID;
 	private String apiEndpoint;
 	private HTTPVerb httpMethod;
-	
-	
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-	        throws ServletException, IOException {
-	    
-	    String authorizationHeader = request.getHeader("Authorization");
+			throws ServletException, IOException {
 
-	    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-	        handleException(response, "Authorization header is missing or invalid", HttpServletResponse.SC_UNAUTHORIZED,"");
-	        return;
-	    }
+		String authorizationHeader = request.getHeader("Authorization");
 
-	    String jwtToken = authorizationHeader.substring(7);
+		if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+			handleException(response, "Authorization header is missing or invalid", HttpServletResponse.SC_UNAUTHORIZED,
+					"");
+			return;
+		}
+		
+		
+		String jwtToken = authorizationHeader.substring(7);
+		
 
-	    try {
-	        UserDetails userDetails = jwtService.getUserDetail(jwtToken);
-	        if (jwtService.validateToken(jwtToken, userDetails)) {
-	            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-	                    userDetails, null, userDetails.getAuthorities());
-	            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-	            SecurityContextHolder.getContext().setAuthentication(authentication);
-	        } else {
-	            handleException(response, "Invalid or expired JWT token", HttpServletResponse.SC_UNAUTHORIZED,jwtToken);
-	            return;
-	        }
-	    } catch (ExpiredJwtException e) {
-	        handleException(response, "JWT token is expired", HttpServletResponse.SC_UNAUTHORIZED,jwtToken);
-	        return;
-	    } catch (MalformedJwtException | SecurityException e) {
-	        handleException(response, "Invalid JWT token", HttpServletResponse.SC_UNAUTHORIZED,jwtToken);
-	        return;
-	    } catch (Exception e) {
-	        handleException(response, e.getMessage(), HttpServletResponse.SC_UNAUTHORIZED,jwtToken);
-	        return;
-	    }
+		try {
+			UserDetails userDetails = jwtService.getUserDetail(jwtToken);
+			if (jwtService.validateToken(jwtToken, userDetails)) {
+				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+						userDetails, null, userDetails.getAuthorities());
+				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			} else {
+				handleException(response, "Invalid or expired JWT token", HttpServletResponse.SC_UNAUTHORIZED,
+						jwtToken);
+				return;
+			}
+		} catch (ExpiredJwtException e) {
+			handleException(response, "JWT token is expired", HttpServletResponse.SC_UNAUTHORIZED, jwtToken);
+			return;
+		} catch (MalformedJwtException | SecurityException e) {
+			handleException(response, "Invalid JWT token", HttpServletResponse.SC_UNAUTHORIZED, jwtToken);
+			return;
+		} catch (Exception e) {
+			handleException(response, e.getMessage(), HttpServletResponse.SC_UNAUTHORIZED, jwtToken);
+			return;
+		}
 
-	    filterChain.doFilter(request, response);
+		filterChain.doFilter(request, response);
 	}
 
-
-	private void handleException(HttpServletResponse response, String message, int status,String token) throws IOException {
+	private void handleException(HttpServletResponse response, String message, int status, String token)
+			throws IOException {
 		TokenErrorResponse.sendErrorResponse(response, message, status, "UnAuthorized");
 		AuditDTO auditDTO = auditLogService.createAuditDTO(userID, "", activityTypePrefix, apiEndpoint, httpMethod);
-		auditLogService.logAudit(auditDTO, status, message,token);
+		auditLogService.logAudit(auditDTO, status, message, token);
 	}
-	
-}
 
+}

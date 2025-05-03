@@ -2,7 +2,6 @@ package sg.edu.nus.iss.voucher.feed.workflow.configuration;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +9,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -33,30 +31,26 @@ public class VoucherFeedSecurityConfig {
 	public String getFrontEndUrl() {
 		return frontEndUrl;
 	}
-
-    
-    @Autowired 
-    JwtFilter jwtFilter;
-
-    
+ 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,JwtFilter jwtFilter) throws Exception {
         return http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration config = new CorsConfiguration();
             config.setAllowedOrigins(List.of(frontEndUrl.trim()));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "OPTIONS"));
+            config.setAllowedMethods(List.of("POST", "PATCH", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
             config.applyPermitDefaultValues();
             return config;
         }))
         .headers(headers -> headers
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Origin", "*"))
-            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS"))
+            .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Methods", "POST, PATCH, OPTIONS"))
             .addHeaderWriter(new StaticHeadersWriter("Access-Control-Allow-Headers", "*"))
             .addHeaderWriter(new HstsHeaderWriter(31536000, false, true))
             .addHeaderWriter((request, response) -> response.addHeader("Cache-Control", "max-age=60, must-revalidate"))
         )
-        .csrf(AbstractHttpConfigurer::disable)
+        // CSRF protection is disabled because JWT Bearer tokens are used for stateless authentication.
+        .csrf(csrf -> csrf.disable()) // NOSONAR - CSRF is not required for JWT-based stateless authentication
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(SECURED_URLS).authenticated()

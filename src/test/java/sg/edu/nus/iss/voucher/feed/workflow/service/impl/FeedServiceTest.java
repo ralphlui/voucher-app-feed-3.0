@@ -1,10 +1,11 @@
 package sg.edu.nus.iss.voucher.feed.workflow.service.impl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 import sg.edu.nus.iss.voucher.feed.workflow.dao.FeedDAO;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
@@ -17,18 +18,15 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class FeedServiceTest {
+@ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
+class FeedServiceTest {
 
     @Mock
     private FeedDAO feedDao;
 
     @InjectMocks
     private FeedService feedService;
-
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     public void testGetFeedsByUserWithPagination_ValidUser() {
@@ -76,6 +74,22 @@ public class FeedServiceTest {
         assertTrue(result.isEmpty());
         verify(feedDao, times(1)).getAllFeedByUserId(userId, page, size);
     }
+    
+    @Test
+    public void testGetFeedsByUserWithPagination_Exception() {
+        String userId = "test@example.com";
+        int page = 1;
+        int size = 10;
+ 
+        when(feedDao.getAllFeedByUserId(userId, page, size)).thenThrow(new RuntimeException("Database connection error"));
+
+        Map<Long, List<FeedDTO>> result = feedService.getFeedsByUserWithPagination(userId, page, size);
+ 
+        assertTrue(result.isEmpty());
+ 
+        verify(feedDao, times(1)).getAllFeedByUserId(userId, page, size);
+    }
+
 
     @Test
     public void testFindByFeedId_FeedExists() {
@@ -101,6 +115,18 @@ public class FeedServiceTest {
         FeedDTO result = feedService.findByFeedId(feedId);
 
         assertNull(result);
+        verify(feedDao, times(1)).findById(feedId);
+    }
+
+    @Test
+    public void testFindByFeedId_Exception() {
+        String feedId = "feed1";
+ 
+        when(feedDao.findById(feedId)).thenThrow(new RuntimeException("Database connection error"));
+
+        FeedDTO result = feedService.findByFeedId(feedId);
+ 
+        assertNull(result); 
         verify(feedDao, times(1)).findById(feedId);
     }
 
@@ -134,5 +160,20 @@ public class FeedServiceTest {
         verify(feedDao, times(1)).upateReadStatus(feedId);
         verify(feedDao, never()).findById(anyString()); 
     }
+    
+    @Test
+    public void testUpdateReadStatusById_Exception() {
+        String feedId = "feed1";
+ 
+        when(feedDao.upateReadStatus(feedId)).thenThrow(new RuntimeException("Database connection error"));
+
+        FeedDTO result = feedService.updateReadStatusById(feedId);
+ 
+        assertNotEquals(feedId, result.getFeedId());
+        verify(feedDao, times(1)).upateReadStatus(feedId);
+        verify(feedDao, never()).findById(anyString()); 
+    }
+
+
 }
 

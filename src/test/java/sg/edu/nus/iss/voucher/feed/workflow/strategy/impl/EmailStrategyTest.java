@@ -12,6 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import sg.edu.nus.iss.voucher.feed.workflow.aws.service.SESSenderService;
 import sg.edu.nus.iss.voucher.feed.workflow.dto.FeedDTO;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -49,6 +50,27 @@ public class EmailStrategyTest {
 
         assertTrue(result);
         
+    }
+    
+    @Test
+    void testSendNotification_ErrorHandling() throws Exception {
+        FeedDTO feed = new FeedDTO();
+        feed.setCampaignId("123");
+        feed.setCampaignDescription("Mid-Autumn Sale");
+        feed.setUserId("111");
+        feed.setUserName("Eleven");
+        feed.setEmail("eleven.11@gmail.com");
+        feed.setStoreName("SuperMart");
+
+        // Simulate an exception during email sending
+        when(sesSenderService.sendEmail(anyString(), anyList(), anyString(), anyString()))
+            .thenThrow(new RuntimeException("Email service failure"));
+
+        boolean result = emailStrategy.sendNotification(feed);
+
+        // Assert that the result is false as the email sending failed
+        assertFalse(result);
+
     }
 
 }
